@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aligning Spatial Transcriptomic Datasets &mdash; STIM 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=1f8ec04b"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            STIM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Exploration data analysis</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">STIM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Aligning Spatial Transcriptomic Datasets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/Integration.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;/home/spatial/projects/NBT_brief/&quot;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">pySTIM2</span> <span class="k">as</span> <span class="nn">pst</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_xe</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="s2">&quot;../Xenium-IRI-ShamR.h5ad&quot;</span><span class="p">)</span>
+<span class="n">adata_vis</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="s2">&quot;../Visium-IRI-ShamR.h5ad&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_xe</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata_xe</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s1">&#39;x_centroid&#39;</span><span class="p">,</span> <span class="s1">&#39;y_centroid&#39;</span><span class="p">]])</span> <span class="c1">## The original cell coords for Xenium data are stored in &#39;x_centroid&#39;, &#39;y_centroid&#39;</span>
+<span class="n">adata_vis</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata_vis</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s1">&#39;Y_coords&#39;</span><span class="p">,</span> <span class="s1">&#39;X_coords&#39;</span><span class="p">]])</span> <span class="c1">## The original spot coords for Visium data are stored in &#39;X_coords&#39;, &#39;Y_coords&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can visualize the marker gene expression of the sham kidneys from two spatial transcriptomic platforms:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;WhRd&#39;</span><span class="p">,[</span><span class="s2">&quot;#e5e5e5&quot;</span><span class="p">,</span> <span class="s2">&quot;#fffacd&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;darkred&quot;</span><span class="p">],</span> <span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>  
+
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata_xe</span><span class="p">,</span> <span class="n">genes</span> <span class="o">=</span> <span class="s2">&quot;Slc7a13&quot;</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">legend_col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/621d68bd8d4784c944d0dc7a578c4d72c83ad0c6f3cfa24c353ce6a26867c3c9.png" src="../_images/621d68bd8d4784c944d0dc7a578c4d72c83ad0c6f3cfa24c353ce6a26867c3c9.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata_vis</span><span class="p">,</span> <span class="n">genes</span> <span class="o">=</span> <span class="s2">&quot;Slc7a13&quot;</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">legend_col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/e01ca4877a50d115cf306e6e9a717b0fd76df08d8aa558d584c60d0919caddaa.png" src="../_images/e01ca4877a50d115cf306e6e9a717b0fd76df08d8aa558d584c60d0919caddaa.png" />
+</div>
+</div>
+<section id="aligning-spatial-transcriptomic-datasets">
+<h1>Aligning Spatial Transcriptomic Datasets<a class="headerlink" href="#aligning-spatial-transcriptomic-datasets" title="Link to this heading"></a></h1>
+<p>There are several packages currently available for aligning spatial transcriptomic datasets, including:<a class="reference external" href="https://paste-bio.readthedocs.io/en/latest/index.html">PASTE</a>, <a class="reference external" href="https://jef.works/STalign/">STalign</a>, and <a class="reference external" href="https://spatialdata.scverse.org/en/latest/index.html">SpatialData</a>. Since our datasets come from serial tissue sections, we aligned the two datasets through manual landmark selection using <a class="reference external" href="https://www.10xgenomics.com/support/software/xenium-explorer/latest/tutorials/xe-image-alignment">Xenium Explorer</a>. After registration, you can save the landmark points and transformation matrix.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.09405798593520641</span><span class="p">,</span><span class="mf">3.41158653187994</span><span class="p">,</span><span class="o">-</span><span class="mf">959.2731416178372</span><span class="p">],</span>
+             <span class="p">[</span><span class="mf">3.41158653187994</span><span class="p">,</span><span class="o">-</span><span class="mf">0.09405798593520641</span><span class="p">,</span><span class="o">-</span><span class="mf">1528.8859782583281</span><span class="p">],</span>
+             <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">align</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">adata_xe</span><span class="p">,</span> <span class="n">adata_vis</span><span class="p">):</span>
+
+    <span class="c1">### Convert Visium spot coordinates to Xenium DAPI coordinates and scale</span>
+    <span class="n">points_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">adata_vis</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s2">&quot;X_coords&quot;</span><span class="p">,</span><span class="s2">&quot;Y_coords&quot;</span><span class="p">]])</span>
+    <span class="n">points_vis2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">points_vis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">points_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))))</span>
+    <span class="n">points_xe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">points_vis2</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">points_xe2</span> <span class="o">=</span> <span class="n">points_xe</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">points_xe</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="n">points_xe2</span> <span class="o">=</span> <span class="n">points_xe2</span><span class="o">*</span><span class="mf">0.2125</span>
+
+    <span class="c1">### Check the alignment</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">points_xe2</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="n">points_xe2</span><span class="p">[:,</span><span class="mi">1</span><span class="p">],</span>  <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Visium&quot;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">adata_xe</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;x_centroid&quot;</span><span class="p">],</span> <span class="n">adata_xe</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;y_centroid&quot;</span><span class="p">],</span>  <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Xenium&quot;</span><span class="p">)</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">points_xe2</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">aligned_points</span> <span class="o">=</span> <span class="n">align</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">adata_xe</span><span class="p">,</span> <span class="n">adata_vis</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/a9d5edf6bf739ec95eecea52862a972fb71aa8c37c1d47b5bc1da33f2f6fdc88.png" src="../_images/a9d5edf6bf739ec95eecea52862a972fb71aa8c37c1d47b5bc1da33f2f6fdc88.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_vis</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">aligned_points</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>After alignment, we can get the alignment &quot;anchors&quot; which stores the mapping between Xenium cells and Visium spots.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">anchor_dict</span><span class="p">,</span> <span class="n">Xenium_agg_gene_df</span> <span class="o">=</span> <span class="n">register_xenium_visium</span><span class="p">(</span><span class="n">adata_xe</span><span class="p">,</span> <span class="n">adata_vis</span><span class="p">,</span> <span class="n">spot_diameter</span><span class="o">=</span><span class="mi">55</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Original Xenium cell #: 85880, mapped Xenium cell #: 23747
+</pre></div>
+</div>
+<img alt="../_images/7788ff13d45cd6f2f431fb27789995204da14229e187f05c0601158b6cf23e40.png" src="../_images/7788ff13d45cd6f2f431fb27789995204da14229e187f05c0601158b6cf23e40.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Calculating pseudobulk Xenium data.....
+Top 5 correlated spatial gene expression .....
+         pearson_r
+Acsm3     0.856231
+Cyp7b1    0.829400
+Slc12a1   0.789112
+Bcat1     0.788783
+Slc7a13   0.769708
+Aqp1      0.767921
+Slc14a2   0.748023
+Ptger3    0.746897
+Fgf1      0.746502
+Epcam     0.745752
+</pre></div>
+</div>
+</div>
+</div>
+<p>The median number of Xenium cells mapped to Visium spots is 19 cells. We can also compare the spatial gene expression patterns between the Visium and the pseudobulk Xenium data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gene</span> <span class="o">=</span> <span class="s2">&quot;Acsm3&quot;</span>
+<span class="n">plot_compare</span><span class="p">(</span><span class="n">adata_xe</span><span class="p">,</span> <span class="n">Xenium_agg_gene_df</span><span class="p">,</span> <span class="n">adata_vis</span><span class="p">,</span> <span class="n">gene</span> <span class="o">=</span> <span class="n">gene</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/c043895ee05e80cb69794b947c5127d84e0cb488e5357bfc679c43ebf09f6aef.png" src="../_images/c043895ee05e80cb69794b947c5127d84e0cb488e5357bfc679c43ebf09f6aef.png" />
+</div>
+</div>
+<p>To add the pre-aligned morphology images, we need to provide the image path and the</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Humphreys Lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
