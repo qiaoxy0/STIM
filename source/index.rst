@@ -7,7 +7,7 @@ STIM: Spatial multimodal Transcriptome Integration and Mapping
 ==============================================================
 
 This package provides a comprehensive toolkit for integrating and analyzing spatial transcriptomics data. \
-It is specifically designed to combine imaging-based Xenium next-generation sequencing, Visium spatial transcriptomics technologies, \
+It is specifically designed to combine imaging-based Xenium next-generation sequencing Visium spatial transcriptomics technologies, \
 and detailed histological analysis. STIM enhances the mapping of gene expression, cell types, and neighborhoods, \
 facilitating investigations into cell-type composition, cell-cell interaction, and molecular interactions within the tissue micronevironment.
 
