@@ -37,9 +37,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "import sys\n",
-    "sys.path.append(\"/home/spatial/projects/NBT_brief/\")\n",
-    "import pySTIM2 as pst"
+    "import pySTIM as pst"
    ]
   },
   {
@@ -49,18 +47,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "adata_iri = sc.read_h5ad(\"Xenium-IRI-Day14R.h5ad\")"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 23,
-   "id": "db078455-01d5-4e7c-acbc-2fb05f5c4a90",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "adata_iri.obs[\"ident\"] = \"Day14R\"\n",
-    "adata_iri.obs[\"ident\"] = adata_iri.obs[\"ident\"].astype(\"category\")"
+    "adata_iri = pst.load_Xenium_iri_data()"
    ]
   },
   {

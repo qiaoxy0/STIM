@@ -103,24 +103,14 @@
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;/home/spatial/projects/NBT_brief/&quot;</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">pySTIM2</span> <span class="k">as</span> <span class="nn">pst</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pySTIM</span> <span class="k">as</span> <span class="nn">pst</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_h5ad</span><span class="p">(</span><span class="s2">&quot;Xenium-IRI-Day14R.h5ad&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;ident&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Day14R&quot;</span>
-<span class="n">adata_iri</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;ident&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata_iri</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;ident&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;category&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">load_Xenium_iri_data</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
