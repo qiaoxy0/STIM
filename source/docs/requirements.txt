@@ -1,5 +1,9 @@
 sphinx
+nbsphinx
 sphinx-rtd-theme
+sphinx-autodoc-typehints
+sphinx-autodoc-annotation
+sphinx_gallery
 myst-nb
 anndata
 scanpy
