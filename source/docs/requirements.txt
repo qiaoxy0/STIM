@@ -9,6 +9,7 @@ anndata
 scanpy
 scipy
 scikit-learn
+shapely
 descartes
 tifffile
 opencv-python
