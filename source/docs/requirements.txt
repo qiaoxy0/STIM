@@ -10,3 +10,5 @@ scanpy
 scipy
 scikit-learn
 descartes
+tifffile
+opencv-python
