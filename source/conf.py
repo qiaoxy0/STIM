@@ -62,12 +62,6 @@ suppress_warnings = ["mystnb.unknown_mime_type"]
 # Turn off notebooks execution
 nb_execution_mode = "off"
 
-nbsphinx_thumbnails = {
-    "docs/notebooks/Integration": "./docs/_images/integration.png",
-    "docs/notebooks/CN_analysis": "./docs/_images/CN.png",
-    "docs/notebooks/LR_analysis": "./docs/_images/LR.png",
-}
-
 myst_heading_anchors = 4
 html_show_sourcelink = False
 html_show_sphinx = False

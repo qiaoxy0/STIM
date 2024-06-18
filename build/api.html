@@ -54,6 +54,14 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#visualization">Visualization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.plot_scatter.html">src.pySTIM.plot_scatter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.plot_scatter_img.html">src.pySTIM.plot_scatter_img</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.plot_fov.html">src.pySTIM.plot_fov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.plot_network.html">src.pySTIM.plot_network</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#neighborhoods">Neighborhoods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.calculate_enrichment.html">src.pySTIM.calculate_enrichment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/src.pySTIM.compute_cci.html">src.pySTIM.compute_cci</a></li>
 </ul>
 </li>
 </ul>
@@ -94,7 +102,29 @@
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/src.pySTIM.plot_scatter.html#src.pySTIM.plot_scatter" title="src.pySTIM.plot_scatter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_scatter</span></code></a>(adata[, xlims, ylims, ...])</p></td>
-<td><p>Plot scatter plots based on AnnData object.</p></td>
+<td><p>Scatter plot of spatial omics data based on AnnData object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/src.pySTIM.plot_scatter_img.html#src.pySTIM.plot_scatter_img" title="src.pySTIM.plot_scatter_img"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_scatter_img</span></code></a>(adata[, xlims, ylims, ...])</p></td>
+<td><p>Scatter plot of spatial omics data based on AnnData object with optional registered background image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/src.pySTIM.plot_fov.html#src.pySTIM.plot_fov" title="src.pySTIM.plot_fov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_fov</span></code></a>(data, n_fields_x, n_fields_y[, ...])</p></td>
+<td><p>Plot field of view (FoV) with optional cell highlighting and field partitioning.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/src.pySTIM.plot_network.html#src.pySTIM.plot_network" title="src.pySTIM.plot_network"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_network</span></code></a>(adata, df[, color_map, ...])</p></td>
+<td><p>Plot a network graph based on cell type proximity enrichment frequency.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="neighborhoods">
+<h2>Neighborhoods<a class="headerlink" href="#neighborhoods" title="Link to this heading"></a></h2>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/src.pySTIM.calculate_enrichment.html#src.pySTIM.calculate_enrichment" title="src.pySTIM.calculate_enrichment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calculate_enrichment</span></code></a>(adata[, groupby, ...])</p></td>
+<td><p>Permutation test to calculate proximity enrichment frequency between cell type pairs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/src.pySTIM.compute_cci.html#src.pySTIM.compute_cci" title="src.pySTIM.compute_cci"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compute_cci</span></code></a>(adata, group, sender, receiver)</p></td>
+<td><p>Infer statistically significant ligand-receptor (LR) pairs by analyzing their co-expression levels within proximal sender-receiver cell pairs.</p></td>
 </tr>
 </tbody>
 </table>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.pySTIM._cci &mdash; STIM 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=1f8ec04b"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            STIM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">STIM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.pySTIM._cci</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.pySTIM._cci</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span>
+<span class="kn">import</span> <span class="nn">statsmodels.stats.multitest</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">NearestNeighbors</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">descartes</span> <span class="kn">import</span> <span class="n">PolygonPatch</span>
+<span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Patch</span><span class="p">,</span> <span class="n">Polygon</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.anchored_artists</span> <span class="kn">import</span> <span class="n">AnchoredSizeBar</span>
+<span class="kn">import</span> <span class="nn">matplotlib.font_manager</span> <span class="k">as</span> <span class="nn">fm</span>
+<span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
+
+<span class="kn">from</span> <span class="nn">._dataset</span> <span class="kn">import</span> <span class="n">lr_db</span>
+<span class="kn">from</span> <span class="nn">._sp_plot</span> <span class="kn">import</span> <span class="n">plot_scatter</span>
+<span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">to_hex</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">get_color_map</span><span class="p">,</span> <span class="n">split_field</span>
+
+<div class="viewcode-block" id="compute_cci">
+<a class="viewcode-back" href="../../../api/src.pySTIM.compute_cci.html#src.pySTIM.compute_cci">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_cci</span><span class="p">(</span>
+    <span class="n">adata</span><span class="p">:</span> <span class="s2">&quot;AnnData&quot;</span><span class="p">,</span>
+    <span class="n">group</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">sender</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">receiver</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">contact_radius</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
+    <span class="n">p_value_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="n">fold_change_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">exp_fraction_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+    <span class="n">expression_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">spatial_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;spatial&#39;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Infer statistically significant ligand-receptor (LR) pairs by analyzing their co-expression levels within proximal sender-receiver cell pairs.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    adata : AnnData</span>
+<span class="sd">        An anndata object containing the data.</span>
+<span class="sd">    group : str</span>
+<span class="sd">        Column name to group cells by (e.g., cell type).</span>
+<span class="sd">    sender : str</span>
+<span class="sd">        Group name of the sender cells.</span>
+<span class="sd">    receiver : str</span>
+<span class="sd">        Group name of the receiver cells.</span>
+<span class="sd">    contact_radius : float, optional</span>
+<span class="sd">        Radius to define contact between cells, by default 30.</span>
+<span class="sd">    p_value_threshold : float, optional</span>
+<span class="sd">        P-value threshold for filtering significant interactions, by default 0.05.</span>
+<span class="sd">    fold_change_threshold : float, optional</span>
+<span class="sd">        Fold change threshold for filtering significant interactions, by default 1.</span>
+<span class="sd">    exp_fraction_threshold : float, optional</span>
+<span class="sd">        Expression fraction threshold for filtering significant interactions, by default 0.1.</span>
+<span class="sd">    expression_threshold : float, optional</span>
+<span class="sd">        Expression level threshold to consider a gene expressed, by default 0.</span>
+<span class="sd">    spatial_key : str, optional</span>
+<span class="sd">        Key for accessing spatial coordinates in `adata.obsm`, by default &#39;spatial&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dict[str, pd.DataFrame]</span>
+<span class="sd">        Dictionary with two DataFrames: &quot;cell_pair&quot; for cell pairs and &quot;lr_pair&quot; for ligand-receptor pairs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Load ligand-receptor pairs</span>
+    <span class="n">lr_network</span> <span class="o">=</span> <span class="n">lr_db</span><span class="o">.</span><span class="n">load_dataframe</span><span class="p">()</span>
+    <span class="n">lr_network</span><span class="p">[</span><span class="s1">&#39;lr_pair&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[</span><span class="s1">&#39;from&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">lr_network</span><span class="p">[</span><span class="s1">&#39;to&#39;</span><span class="p">],</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+    <span class="n">ligand</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="n">expressed_ligand</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ligand</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of expressed ligand genes: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">expressed_ligand</span><span class="p">))</span>
+    <span class="n">lr_network</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[</span><span class="n">lr_network</span><span class="p">[</span><span class="s2">&quot;from&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">expressed_ligand</span><span class="p">)]</span>
+    
+    <span class="n">receptor</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="n">expressed_receptor</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">receptor</span><span class="p">)</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">var_names</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of expressed receptor genes: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">expressed_receptor</span><span class="p">))</span>
+    <span class="n">lr_network</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[</span><span class="n">lr_network</span><span class="p">[</span><span class="s2">&quot;to&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">expressed_receptor</span><span class="p">)]</span>
+    <span class="c1">## drop duplicates</span>
+    <span class="n">lr_network</span> <span class="o">=</span> <span class="n">lr_network</span><span class="p">[[</span><span class="s2">&quot;from&quot;</span><span class="p">,</span><span class="s2">&quot;to&quot;</span><span class="p">,</span><span class="s2">&quot;lr_pair&quot;</span><span class="p">]]</span>
+    <span class="n">lr_network</span> <span class="o">=</span> <span class="n">lr_network</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+
+    <span class="c1"># Prepare sender and receiver datasets</span>
+    <span class="n">sender_cells</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">==</span> <span class="n">sender</span><span class="p">]</span>
+    <span class="n">receiver_cells</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">==</span> <span class="n">receiver</span><span class="p">]</span>
+
+    <span class="c1"># Calculate contact cell pairs</span>
+    <span class="n">contact_pairs</span> <span class="o">=</span> <span class="n">get_close_contact_cell_pairs</span><span class="p">(</span><span class="n">sender_cells</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">receiver_cells</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">contact_radius</span><span class="p">)</span>
+    <span class="n">noncontact_pairs</span> <span class="o">=</span> <span class="n">random_select_non_contact_cell_pairs</span><span class="p">(</span><span class="n">sender_cells</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">receiver_cells</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">contact_pairs</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">lr_pair</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">lr_network</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(),</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">lr_network</span><span class="p">),</span> <span class="n">desc</span><span class="o">=</span><span class="s1">&#39;Processing LR Pairs&#39;</span><span class="p">):</span>
+        
+        <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span> <span class="o">=</span> <span class="n">lr_pair</span><span class="o">.</span><span class="n">_1</span><span class="p">,</span> <span class="n">lr_pair</span><span class="o">.</span><span class="n">to</span>
+
+        <span class="n">contact_lr_exp</span><span class="p">,</span> <span class="n">co_exp_count</span> <span class="o">=</span> <span class="n">get_lr_pair_expressions_for_cell_pairs</span><span class="p">(</span>
+            <span class="n">sender_cells</span><span class="p">,</span> <span class="n">receiver_cells</span><span class="p">,</span> <span class="n">contact_pairs</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">expression_threshold</span><span class="p">)</span>
+        
+        <span class="n">noncontact_lr_exp</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_lr_pair_expressions_for_cell_pairs</span><span class="p">(</span>
+            <span class="n">sender_cells</span><span class="p">,</span> <span class="n">receiver_cells</span><span class="p">,</span> <span class="n">noncontact_pairs</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">expression_threshold</span><span class="p">)</span>
+
+        <span class="n">contact_mean_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">contact_lr_exp</span><span class="p">)</span>
+        <span class="n">noncontact_mean_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">noncontact_lr_exp</span><span class="p">)</span>
+
+        <span class="n">fold_change</span> <span class="o">=</span> <span class="n">contact_mean_exp</span> <span class="o">/</span> <span class="n">noncontact_mean_exp</span>
+        <span class="n">exp_fraction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">contact_lr_exp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">contact_lr_exp</span><span class="p">)</span>
+        <span class="n">LR_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">contact_mean_exp</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">_</span><span class="p">,</span> <span class="n">p_value</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">ttest_ind</span><span class="p">(</span><span class="n">contact_lr_exp</span><span class="p">,</span> <span class="n">noncontact_lr_exp</span><span class="p">,</span> <span class="n">equal_var</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">p_value</span> <span class="o">&lt;</span> <span class="n">p_value_threshold</span> <span class="ow">and</span> <span class="n">fold_change</span> <span class="o">&gt;</span> <span class="n">fold_change_threshold</span> <span class="ow">and</span> <span class="n">exp_fraction</span> <span class="o">&gt;</span> <span class="n">exp_fraction_threshold</span><span class="p">:</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">sender</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">lr_pair</span><span class="o">.</span><span class="n">lr_pair</span><span class="p">,</span> <span class="n">LR_score</span><span class="p">,</span> <span class="n">contact_mean_exp</span><span class="p">,</span> <span class="n">exp_fraction</span><span class="p">,</span> <span class="n">co_exp_count</span><span class="p">,</span> <span class="n">fold_change</span><span class="p">,</span> <span class="n">p_value</span><span class="p">])</span>
+        
+    <span class="n">results_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;Sender&#39;</span><span class="p">,</span> <span class="s1">&#39;Receiver&#39;</span><span class="p">,</span> <span class="s1">&#39;Ligand&#39;</span><span class="p">,</span> <span class="s1">&#39;Receptor&#39;</span><span class="p">,</span> <span class="s1">&#39;LR_pair&#39;</span><span class="p">,</span> <span class="s1">&#39;LR_Score&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_contact_lr_exp&#39;</span><span class="p">,</span> <span class="s1">&#39;exp_fraction&#39;</span><span class="p">,</span> <span class="s1">&#39;co_exp_count&#39;</span><span class="p">,</span> <span class="s1">&#39;fold_change&#39;</span><span class="p">,</span> <span class="s1">&#39;pval&#39;</span><span class="p">])</span>
+    
+    <span class="n">results_df</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;pval&#39;</span><span class="p">])]</span>
+    
+    <span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;pval_adjusted&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">statsmodels</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">multitest</span><span class="o">.</span><span class="n">multipletests</span><span class="p">(</span><span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;pval&#39;</span><span class="p">],</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fdr_bh&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="n">results_df_filtered</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[(</span><span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;pval_adjusted&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">p_value_threshold</span><span class="p">)</span> <span class="o">&amp;</span>
+                                     <span class="p">(</span><span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;fold_change&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">fold_change_threshold</span><span class="p">)</span> <span class="o">&amp;</span>
+                                     <span class="p">(</span><span class="n">results_df</span><span class="p">[</span><span class="s1">&#39;exp_fraction&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">exp_fraction_threshold</span><span class="p">)]</span>
+    
+    <span class="n">cell_pair_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">contact_pairs</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;cell_sender&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_receiver&quot;</span><span class="p">])</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;cell_pair&quot;</span><span class="p">:</span> <span class="n">cell_pair_df</span><span class="p">,</span> <span class="s2">&quot;lr_pair&quot;</span><span class="p">:</span> <span class="n">results_df_filtered</span><span class="p">}</span>
+    
+    <span class="k">return</span> <span class="n">res</span></div>
+
+
+<span class="k">def</span> <span class="nf">get_close_contact_cell_pairs</span><span class="p">(</span><span class="n">query_df</span><span class="p">,</span> <span class="n">ref_df</span><span class="p">,</span> <span class="n">contact_radius</span><span class="p">,</span> <span class="n">xy_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;x_centroid&#39;</span><span class="p">,</span> <span class="s1">&#39;y_centroid&#39;</span><span class="p">]):</span>
+    <span class="n">query_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">query_df</span><span class="p">[</span><span class="n">xy_cols</span><span class="p">])</span>
+    <span class="n">ref_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ref_df</span><span class="p">[</span><span class="n">xy_cols</span><span class="p">])</span>
+
+    <span class="n">contact_cell_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">point_tree</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">spatial</span><span class="o">.</span><span class="n">cKDTree</span><span class="p">(</span><span class="n">ref_coords</span><span class="p">)</span>
+    <span class="n">neighbor_ids</span> <span class="o">=</span> <span class="n">point_tree</span><span class="o">.</span><span class="n">query_ball_point</span><span class="p">(</span><span class="n">query_coords</span><span class="p">,</span> <span class="n">contact_radius</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">neighbor_ids</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">neighbor_ids</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="n">contact_cell_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">query_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ref_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">contact_cell_pairs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">random_select_non_contact_cell_pairs</span><span class="p">(</span><span class="n">query_df</span><span class="p">,</span> <span class="n">ref_df</span><span class="p">,</span> <span class="n">contact_cell_pairs</span><span class="p">):</span>
+    <span class="n">non_contact_query_cells</span> <span class="o">=</span> <span class="n">query_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">~</span><span class="n">query_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">contact_cell_pairs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])]</span>
+    <span class="n">non_contact_ref_cells</span> <span class="o">=</span> <span class="n">ref_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">~</span><span class="n">ref_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">contact_cell_pairs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])]</span>
+
+    <span class="n">n_pairs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">contact_cell_pairs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">non_contact_query_cells</span><span class="p">,</span> <span class="n">n_pairs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">non_contact_ref_cells</span><span class="p">,</span> <span class="n">n_pairs</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_lr_pair_expressions_for_cell_pairs</span><span class="p">(</span><span class="n">adata_ligand_cells</span><span class="p">,</span> <span class="n">adata_receptor_cells</span><span class="p">,</span> <span class="n">cell_pairs</span><span class="p">,</span> <span class="n">ligand_gene</span><span class="p">,</span> <span class="n">receptor_gene</span><span class="p">,</span> <span class="n">expression_threshold</span><span class="p">):</span>
+    <span class="n">ligand_map</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;cell_id&#39;</span><span class="p">:</span> <span class="n">adata_ligand_cells</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="n">adata_ligand_cells</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])})</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;cell_id&#39;</span><span class="p">)</span>
+    <span class="n">receptor_map</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s1">&#39;cell_id&#39;</span><span class="p">:</span> <span class="n">adata_receptor_cells</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="n">adata_receptor_cells</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])})</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;cell_id&#39;</span><span class="p">)</span>
+
+    <span class="n">lig_cell_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ligand_map</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cell_pairs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="n">rec_cell_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">receptor_map</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cell_pairs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]])</span>
+
+    <span class="n">lig_gene_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">adata_ligand_cells</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">ligand_gene</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">rec_gene_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">adata_receptor_cells</span><span class="o">.</span><span class="n">var</span><span class="o">.</span><span class="n">index</span> <span class="o">==</span> <span class="n">receptor_gene</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">lig_exp</span> <span class="o">=</span> <span class="n">adata_ligand_cells</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">lig_cell_ids</span><span class="p">,</span> <span class="n">lig_gene_id</span><span class="p">]</span>
+    <span class="n">rec_exp</span> <span class="o">=</span> <span class="n">adata_receptor_cells</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="n">rec_cell_ids</span><span class="p">,</span> <span class="n">rec_gene_id</span><span class="p">]</span>
+
+    <span class="n">co_exp_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">lig_exp</span> <span class="o">&gt;</span> <span class="n">expression_threshold</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">rec_exp</span> <span class="o">&gt;</span> <span class="n">expression_threshold</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">lig_exp</span> <span class="o">*</span> <span class="n">rec_exp</span><span class="p">,</span> <span class="n">co_exp_count</span>
+
+<span class="c1"># Example usage</span>
+<span class="c1"># result = compute_cci(adata, group, &#39;Sender&#39;, &#39;Receiver&#39;)</span>
+
+<span class="k">def</span> <span class="nf">vis_cci</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">cmap_dict</span><span class="p">):</span>
+    
+    <span class="n">celltype_sender</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;lr_pair&quot;</span><span class="p">][</span><span class="s2">&quot;Sender&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">celltype_Receiver</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;lr_pair&quot;</span><span class="p">][</span><span class="s2">&quot;Receiver&quot;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">key_added</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">celltype_sender</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">celltype_Receiver</span><span class="si">}</span><span class="s2">_ccipair&quot;</span>
+    <span class="n">ta</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">key_added</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Rest&quot;</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;cell_pair&quot;</span><span class="p">][</span><span class="s2">&quot;cell_sender&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="n">key_added</span><span class="p">]</span> <span class="o">=</span> <span class="n">celltype_sender</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="s2">&quot;cell_pair&quot;</span><span class="p">][</span><span class="s2">&quot;cell_receiver&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()),</span> <span class="n">key_added</span><span class="p">]</span> <span class="o">=</span> <span class="n">celltype_Receiver</span>
+    
+    <span class="k">if</span> <span class="n">cmap_dict</span><span class="p">:</span>
+        <span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span> <span class="o">=</span> <span class="n">key_added</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap_dict</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">legend_col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cmap_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">celltype_sender</span><span class="p">:</span> <span class="s1">&#39;#2596be&#39;</span><span class="p">,</span>
+            <span class="n">celltype_Receiver</span><span class="p">:</span> <span class="s2">&quot;#e8847d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Rest&quot;</span><span class="p">:</span> <span class="s1">&#39;#eeeeee&#39;</span>
+        <span class="p">}</span>
+        <span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span> <span class="o">=</span> <span class="n">key_added</span><span class="p">,</span> <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap_dict</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">legend_col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">vis_lr_cci</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">bg_color</span><span class="p">,</span> <span class="n">cmap1</span><span class="p">,</span> <span class="n">cmap2</span><span class="p">,</span> 
+                   <span class="n">ptsize</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ylims</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">ticks</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;cell_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+    <span class="n">colors_background</span> <span class="o">=</span> <span class="p">[</span><span class="n">bg_color</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)</span>
+
+    <span class="n">cell_sender_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">==</span> <span class="n">sender</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">cell_idx</span><span class="p">)</span>
+    <span class="n">subset_idx_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)</span>
+    <span class="n">sender_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;cell_idx&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cell_sender_set</span> <span class="ow">and</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">subset_idx_set</span><span class="p">]</span>
+    <span class="n">sender_coord</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">sender_idx</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of sender cells: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sender_idx</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">ligand</span><span class="p">,</span> <span class="n">use_raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+    <span class="n">c_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)</span>
+    <span class="n">norm1</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
+    <span class="n">all_colors</span> <span class="o">=</span> <span class="n">cmap1</span><span class="p">(</span><span class="n">counts</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span>
+    <span class="n">all_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">all_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">sender_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sender_idx</span><span class="p">]</span>
+    <span class="n">sender_color_hex</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sender_colors</span><span class="p">]</span>
+
+    <span class="n">cell_receiver_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">==</span> <span class="n">receiver</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">cell_idx</span><span class="p">)</span>
+    <span class="n">subset_idx_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)</span>
+    <span class="n">receiver_idx</span> <span class="o">=</span> <span class="p">[</span><span class="n">idx</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;cell_idx&quot;</span><span class="p">])</span> <span class="k">if</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cell_receiver_set</span> <span class="ow">and</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">subset_idx_set</span><span class="p">]</span>
+    <span class="n">receiver_coord</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">receiver_idx</span><span class="p">]</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of receiver cells: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">receiver_idx</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="n">counts2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">receptor</span><span class="p">,</span> <span class="n">use_raw</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+    <span class="n">c_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts2</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)</span>
+    <span class="n">norm2</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">counts2</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
+    <span class="n">all_colors</span> <span class="o">=</span> <span class="n">cmap2</span><span class="p">(</span><span class="n">counts2</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span>
+    <span class="n">all_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">all_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">receiver_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">receiver_idx</span><span class="p">]</span>
+    <span class="n">receiver_color_hex</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">receiver_colors</span><span class="p">]</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">))</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">poly</span><span class="p">:</span>
+        <span class="n">poly_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+        <span class="n">new_lib</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">poly_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">colors_background</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;#bfbfbf&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span>
+                            <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">sender_color_hex</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;#bfbfbf&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span>
+                            <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sender_idx</span><span class="p">)]</span>
+        <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">receiver_color_hex</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="s2">&quot;#bfbfbf&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span>
+                            <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">receiver_idx</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_coord</span><span class="o">.</span><span class="n">x_centroid</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_coord</span><span class="o">.</span><span class="n">y_centroid</span><span class="p">),</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                   <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#f2f2f2&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ptsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sender_coord</span><span class="o">.</span><span class="n">x_centroid</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sender_coord</span><span class="o">.</span><span class="n">y_centroid</span><span class="p">),</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                   <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">sender_color_hex</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ptsize</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">receiver_coord</span><span class="o">.</span><span class="n">x_centroid</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">receiver_coord</span><span class="o">.</span><span class="n">y_centroid</span><span class="p">),</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                   <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">receiver_color_hex</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ptsize</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">xlims</span> <span class="ow">and</span> <span class="n">ylims</span><span class="p">:</span>
+        <span class="n">cbar_ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span> 
+        <span class="n">cbar_ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">1.08</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">])</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cbar_ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span>
+        <span class="n">cbar_ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">.88</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">])</span> 
+        
+    <span class="n">cbar1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm1</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap1</span><span class="p">),</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax1</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
+    <span class="n">cbar1</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)])</span>
+    <span class="n">cbar1</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">cbar1</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">ligand</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">cbar1</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">cbar2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm2</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap2</span><span class="p">),</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax2</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;vertical&#39;</span><span class="p">)</span>
+    <span class="n">cbar2</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([</span><span class="nb">min</span><span class="p">(</span><span class="n">counts2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts2</span><span class="p">,</span> <span class="mf">0.995</span><span class="p">)])</span>
+    <span class="n">cbar2</span><span class="o">.</span><span class="n">set_ticklabels</span><span class="p">([</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">cbar2</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">receptor</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">cbar2</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+      
+
+    <span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+               <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;lower left&#39;</span><span class="p">,</span> 
+               <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span>
+               <span class="n">borderpad</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+               <span class="n">bbox_transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span> 
+               <span class="n">sep</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+               <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+               <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">size_vertical</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+               <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+        
+    <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Humphreys Lab.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

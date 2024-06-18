@@ -10,23 +10,57 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 import matplotlib.font_manager as fm
 from matplotlib.colors import LinearSegmentedColormap
+from typing import Dict, List, Optional, Tuple
+from anndata import AnnData
 
 from ._dataset import lr_db
 from ._sp_plot import plot_scatter
 from ._utils import to_hex, crop, get_color_map, split_field
 
 def compute_cci(
-    adata,
-    group,
-    sender,
-    receiver,
-    contact_radius=30,
-    p_value_threshold=0.05,
-    fold_change_threshold=1,
-    exp_fraction_threshold=0.1,
-    expression_threshold=0,
-    spatial_key='spatial'
-):
+    adata: "AnnData",
+    group: str,
+    sender: str,
+    receiver: str,
+    contact_radius: float = 30,
+    p_value_threshold: float = 0.05,
+    fold_change_threshold: float = 1,
+    exp_fraction_threshold: float = 0.1,
+    expression_threshold: float = 0,
+    spatial_key: str = 'spatial'
+) -> Dict[str, pd.DataFrame]:
+    """
+    Infer statistically significant ligand-receptor (LR) pairs by analyzing their co-expression levels within proximal sender-receiver cell pairs.
+
+    Parameters
+    ----------
+    adata : AnnData
+        An anndata object containing the data.
+    group : str
+        Column name to group cells by (e.g., cell type).
+    sender : str
+        Group name of the sender cells.
+    receiver : str
+        Group name of the receiver cells.
+    contact_radius : float, optional
+        Radius to define contact between cells, by default 30.
+    p_value_threshold : float, optional
+        P-value threshold for filtering significant interactions, by default 0.05.
+    fold_change_threshold : float, optional
+        Fold change threshold for filtering significant interactions, by default 1.
+    exp_fraction_threshold : float, optional
+        Expression fraction threshold for filtering significant interactions, by default 0.1.
+    expression_threshold : float, optional
+        Expression level threshold to consider a gene expressed, by default 0.
+    spatial_key : str, optional
+        Key for accessing spatial coordinates in `adata.obsm`, by default 'spatial'.
+
+    Returns
+    -------
+    Dict[str, pd.DataFrame]
+        Dictionary with two DataFrames: "cell_pair" for cell pairs and "lr_pair" for ligand-receptor pairs.
+    """
+
     # Load ligand-receptor pairs
     lr_network = lr_db.load_dataframe()
     lr_network['lr_pair'] = lr_network['from'].str.cat(lr_network['to'], sep='-')

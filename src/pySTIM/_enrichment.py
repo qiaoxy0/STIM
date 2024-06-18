@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import coo_matrix
 from sklearn.neighbors import radius_neighbors_graph
-
+from anndata import AnnData
 import requests
 import json
 import time
@@ -10,17 +10,40 @@ import seaborn as sns
 sns.set_style("ticks")
 from matplotlib.ticker import MaxNLocator
 
-def calculate_enrichment(adata, 
-            groupby = "celltype", 
-            n_permutations = 100, 
-            niche_radius = 15.0,
-            permute_radius = 50.0, 
-            spatial_key = "spatial",
-            seed = 123):
-    '''
-    Permutation test: Randomizing the actual spatial locations of the cells, then computed the proximity 
-    between all possible pairs of cell types under this randomized spatial arrangement.
-    '''
+def calculate_enrichment(
+    adata: "AnnData", 
+    groupby: str = "celltype", 
+    n_permutations: int = 100, 
+    niche_radius: float = 15.0,
+    permute_radius: float = 50.0, 
+    spatial_key: str = "spatial",
+    seed: int = 123
+) -> pd.DataFrame:
+    """
+    Permutation test to calculate proximity enrichment frequency between cell type pairs.
+
+    Parameters
+    ----------
+    adata : AnnData
+        An anndata object containing the data.
+    groupby : str, optional
+        Column name to group by, by default "celltype".
+    n_permutations : int, optional
+        Number of permutations for the test, by default 100.
+    niche_radius : float, optional
+        Radius to define the niche, by default 15.0.
+    permute_radius : float, optional
+        Radius for permutation, by default 50.0.
+    spatial_key : str, optional
+        Key for accessing spatial coordinates in `adata.obsm`, by default "spatial".
+    seed : int, optional
+        Random seed for reproducibility, by default 123.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing z-scores for cell type enrichment.
+    """
     categories_str_cat = list(adata.obs[groupby].cat.categories)
     categories_num_cat = range(len(categories_str_cat))
     map_dict = dict(zip(categories_num_cat, categories_str_cat))
@@ -33,7 +56,7 @@ def calculate_enrichment(adata,
     max_index = len(categories_num_cat)
     pair_counts = np.zeros((max_index, max_index))
     
-    ## calculate the true interactions
+    # Calculate the true interactions
     con = radius_neighbors_graph(adata.obsm[spatial_key], niche_radius,  mode='connectivity', include_self=False)
     con_coo = coo_matrix(con)
     print(f"Calculating observed interactions...")
@@ -51,8 +74,6 @@ def calculate_enrichment(adata,
             else:
                 pair_counts[type1, type2] += 1
                 
-    #pair_counts = pair_counts/pair_counts.sum()  ## normalize by total counts                        
-    ## calculate the null hypothesis
     coords = adata.obsm[spatial_key]
 
     pair_counts_null = np.zeros((max_index, max_index, n_permutations))
@@ -64,7 +85,7 @@ def calculate_enrichment(adata,
         permuted_con = radius_neighbors_graph(permuted_coords, niche_radius, mode='connectivity', include_self=False)
         permuted_con_coo = coo_matrix(permuted_con)
         
-        if (perm+1)%100==1:
+        if (perm + 1) % 100 == 1:
             print(f"Permutation iterations: {perm}...")
 
         pair_counts_permuted = np.zeros((max_index, max_index))
@@ -83,18 +104,18 @@ def calculate_enrichment(adata,
                 else:
                     pair_counts_permuted[type1, type2] += 1
         
-        #pair_counts_permuted = pair_counts_permuted/pair_counts_permuted.sum()  ## normalize by total counts 
         pair_counts_null[:, :, perm] = pair_counts_permuted
 
     pair_counts_permuted_means = np.mean(pair_counts_null, axis=2)
     pair_counts_permuted_stds = np.std(pair_counts_null, axis=2)
     
     z_scores = (pair_counts - pair_counts_permuted_means) / pair_counts_permuted_stds
-    z_scores[z_scores<0]=0
-    z_score_df = pd.DataFrame(z_scores, index = categories_str_cat, columns = categories_str_cat)
+    z_scores[z_scores < 0] = 0
+    z_score_df = pd.DataFrame(z_scores, index=categories_str_cat, columns=categories_str_cat)
     print("Finished!")
     
     return z_score_df
+
 
 def plot_connectivity(df, cmap, dpi = 100, figsize = (6,5)):
 

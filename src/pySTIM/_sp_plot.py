@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib
+from anndata import AnnData
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.font_manager as fm
@@ -238,26 +239,47 @@ def plot_scatter(
     save: Optional[str] = None,
 ) -> None:
     """
-    Plot scatter plots based on AnnData object.
+    Scatter plot of spatial omics data based on AnnData object.
 
-    Parameters:
-    - adata: A anndata object.
-    - xlims, ylims: The x and y limits for cropping.
-    - color_by: The column to color by.
-    - genes: Gene(s) to plot.
-    - seed: Random seed.
-    - alpha: Transparency level.
-    - cmap: Colormap.
-    - ptsize: Point size.
-    - ticks: Whether to show ticks.
-    - dpi: Dots per inch.
-    - width, height: Width and height of plot.
-    - legend_loc: Legend location.
-    - legend_col: Number of columns in the legend.
-    - bbox_to_anchor: Legend bbox_to_anchor.
-    - save: Filename to save the plot to.
+    Parameters
+    ----------
+    adata : sc.AnnData
+        An anndata object containing the data.
+    xlims : tuple, optional
+        The x-axis limits for cropping, by default None.
+    ylims : tuple, optional
+        The y-axis limits for cropping, by default None.
+    color_by : str, optional
+        The column to color by, by default None.
+    genes : Union[str, List[str]], optional
+        Gene to plot, by default None.
+    seed : int, optional
+        Random seed for reproducibility, by default 123.
+    alpha : float, optional
+        Transparency level of the points, by default 0.8.
+    cmap : str, optional
+        Colormap to use for plotting, by default None.
+    ptsize : float, optional
+        Size of the points, by default 0.1.
+    ticks : bool, optional
+        Whether to show ticks on the plot, by default False.
+    dpi : int, optional
+        Resolution for the plot, by default 300.
+    width : int, optional
+        Width of the plot, by default 5.
+    height : int, optional
+        Height of the plot, by default 5.
+    legend_loc : str, optional
+        Location of the legend, by default "center left".
+    legend_col : int, optional
+        Number of columns in the legend, by default 2.
+    bbox_to_anchor : tuple, optional
+        Bounding box to anchor the legend, by default (1.0, 0.5).
+    save : str, optional
+        Filename to save the plot to, by default None.
 
-    Returns:
+    Returns
+    -------
     None
     """
 
@@ -271,9 +293,6 @@ def plot_scatter(
         ticks: bool = False,
     ) -> None:
 
-        """
-        Helper function to create the scatter plot.
-        """
         if not ticks:
             plt.tick_params(
                 left=False,
@@ -287,7 +306,6 @@ def plot_scatter(
         ax.scatter(np.array(coords[:,0]), np.array(coords[:,1]), marker='o', linewidth=0,
                    alpha=alpha, color=np.array(colors), s=ptsize)
 
-        #ax.set_title(group)
         ax.axis("scaled")
         ax.grid(False)
         ax.invert_yaxis()
@@ -361,7 +379,6 @@ def plot_scatter(
 
             cmap = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
 
-            # c_max = max(counts)
             c_max = np.quantile(counts, 0.99)
             c_min = min(counts)
             bar_colors = [cmap(c / c_max) for c in counts]
@@ -453,6 +470,50 @@ def plot_scatter_img(
     img_alpha=1,
     bbox_to_anchor: tuple = (1.0, 0.5),
 ) -> None:
+    """
+    Scatter plot of spatial omics data based on AnnData object with optional registered background image.
+    
+    Parameters
+    ----------
+    adata : sc.AnnData
+        An anndata object containing the data.
+    xlims : tuple, optional
+        The x-axis limits for cropping, by default None.
+    ylims : tuple, optional
+        The y-axis limits for cropping, by default None.
+    color_by : str, optional
+        The column to color by, by default None.
+    genes : Union[str, List[str]], optional
+        Gene(s) to plot, by default None.
+    seed : int, optional
+        Random seed for reproducibility, by default 123.
+    alpha : float, optional
+        Transparency level of the points, by default 0.8.
+    cmap : str, optional
+        Colormap to use for plotting, by default None.
+    ptsize : float, optional
+        Size of the points, by default 0.1.
+    ticks : bool, optional
+        Whether to show ticks on the plot, by default False.
+    dpi : int, optional
+        Dots per inch for the plot, by default 300.
+    legend_loc : str, optional
+        Location of the legend, by default "center left".
+    legend_col : int, optional
+        Number of columns in the legend, by default 2.
+    image : optional
+        Background image to plot, by default None.
+    image_key : str, optional
+        Key for accessing the image from `adata.uns`, by default "spatial".
+    img_alpha : float, optional
+        Transparency level of the image, by default 1.
+    bbox_to_anchor : tuple, optional
+        Bounding box to anchor the legend, by default (1.0, 0.5).
+
+    Returns
+    -------
+    None
+    """
     
     def plot(
         ax: plt.Axes,
@@ -464,9 +525,7 @@ def plot_scatter_img(
         xlims: Optional[tuple] = None,
         ylims: Optional[tuple] = None,
     ) -> None:
-        """
-        Helper function to create the scatter plot.
-        """
+
         if not ticks:
             plt.tick_params(
                 left=False,
@@ -544,7 +603,6 @@ def plot_scatter_img(
             adata, color_by, cmap, seed, genes, filtered_subset_idx
         )
 
-        # c_max = max(counts)
         c_max = np.quantile(counts, 0.99)
         c_min = min(counts)
         bar_colors = [cmap(c / c_max) for c in counts]
@@ -681,39 +739,61 @@ def plot_compare(adata_xe, Xenium_agg_gene_df, adata_vis, gene, cmap, save = Non
     plt.show()
     
 
-def plot_fov(data: "AnnData", 
-             n_fields_x: int, 
-             n_fields_y: int, 
-             x_col: str = "x_centroid", 
-             y_col: str = "y_centroid",
-             group_label: Optional[str] = None, 
-             highlight_cell: Optional[str] = None, 
-             highlight_color: str = '#FC4B42',
-             fill: bool = True, 
-             point_size: float = 0.8, 
-             alpha: float = 0.3,
-             font_size: Optional[float] = None, 
-             resolution: int = 200, 
-             plot_width: int = 5, 
-             plot_height: int = 5) -> None:
+def plot_fov(
+    data: "AnnData", 
+    n_fields_x: int, 
+    n_fields_y: int, 
+    x_col: str = "x_centroid", 
+    y_col: str = "y_centroid",
+    group_label: Optional[str] = None, 
+    highlight_cell: Optional[str] = None, 
+    highlight_color: str = '#FC4B42',
+    fill: bool = True, 
+    point_size: float = 0.8, 
+    alpha: float = 0.3,
+    font_size: Optional[float] = None, 
+    resolution: int = 200, 
+    plot_width: int = 5, 
+    plot_height: int = 5
+) -> None:
     """
     Plot field of view (FoV) with optional cell highlighting and field partitioning.
-    
-    Parameters:
-    - adata: An anndata object.
-    - n_fields_x, n_fields_y: Number of fields in x and y dimensions to partition the plot.
-    - x_col, y_col: Column names indicating x and y coordinates in the data.
-    - group_label: Column name to use for grouping and highlighting cells.
-    - highlight_cell: Cell group label to be highlighted.
-    - highlight_color: Color for highlighted cells.
-    - fill: Whether to fill the polygons representing fields.
-    - point_size: Size of the plotted cell points.
-    - alpha: Transparency level for the polygons and cell points.
-    - font_size: Font size for the field numbers. Calculated based on n_fields_x and n_fields_y if not provided.
-    - resolution: Resolution of the plot in dpi.
-    - plot_width, plot_height: Figure size.
-    
-    Returns:
+
+    Parameters
+    ----------
+    data : AnnData
+        An anndata object containing the data.
+    n_fields_x : int
+        Number of fields in the x dimension to partition the plot.
+    n_fields_y : int
+        Number of fields in the y dimension to partition the plot.
+    x_col : str, optional
+        Column name indicating x coordinates in the data, by default "x_centroid".
+    y_col : str, optional
+        Column name indicating y coordinates in the data, by default "y_centroid".
+    group_label : str, optional
+        Column name to use for grouping and highlighting cells, by default None.
+    highlight_cell : str, optional
+        Cell group label to be highlighted, by default None.
+    highlight_color : str, optional
+        Color for highlighted cells, by default '#FC4B42'.
+    fill : bool, optional
+        Whether to fill the polygons representing fields, by default True.
+    point_size : float, optional
+        Size of the plotted cell points, by default 0.8.
+    alpha : float, optional
+        Transparency level for the polygons and cell points, by default 0.3.
+    font_size : float, optional
+        Font size for the field numbers. Calculated based on n_fields_x and n_fields_y if not provided, by default None.
+    resolution : int, optional
+        Resolution of the plot in dpi, by default 200.
+    plot_width : int, optional
+        Width of the plot, by default 5.
+    plot_height : int, optional
+        Height of the plot, by default 5.
+
+    Returns
+    -------
     None
     """
     
@@ -755,24 +835,7 @@ def plot_fov(data: "AnnData",
     ax.invert_yaxis()
     ax.set_frame_on(False)
     plt.show()
-    
-def add_img(adata, img_path, transformation = None, image_key="spatial"):
-    
-    if img_path.lower().endswith(('.tif', '.tiff')):
-        img = tiff.imread(img_path)
-    else:
-        img = np.array(Image.open(img_path))
-        
-    if transformation is not None:
-        from skimage.transform import warp
-        img = warp(img, transformation, output_shape=img.shape)
 
-    if library_key not in adata.uns:
-        adata.uns[library_key] = {}
-
-    adata.uns[library_key]["image"] = img
-
-    return adata
     
 def subset_fov(adata: "AnnData", 
                fov: List[int], 
@@ -802,76 +865,105 @@ def subset_fov(adata: "AnnData",
     
     return min_pt[0], max_pt[0], min_pt[1], max_pt[1]
 
-def plot_network(adata, df, color_map = None, groupby = "celltype", highlight=None, seed = 1):
-	
-	celltype_counts = pd.DataFrame(adata.obs[groupby].value_counts()).reset_index()
-	celltype_counts.columns = ['CellType', "Count"]
-	
-	df.replace(0, 0.001, inplace=True) ### add small values to facilitate the network visualization
-	df = df.reset_index()
-	zscore_long = pd.melt(df, id_vars=["index"], value_vars=df.columns)
-	zscore_long.columns = ['CellType1', 'CellType2', 'zscore']
-	zscore_long = zscore_long[zscore_long["CellType1"]!=zscore_long["CellType2"]]
-	zscore_long = zscore_long.sort_values(by=['CellType1', 'CellType2']).reset_index(drop=True)
-	
-	if color_map is None:
-		celltypes = adata.obs[groupby].cat.categories
-		n = len(celltypes)
-		cmap = plt.get_cmap("tab20", lut=n)
-		ct_colors = [plt.cm.colors.rgb2hex(cmap(i)) for i in range(cmap.N)]
-		color_map = dict(zip(celltypes, ct_colors))
-		
-	if highlight:
-		for ct, color in color_map.items():
-			if ct in highlight:
-				color_map[ct] = color
-			else:
-				color_map[ct] = '#d3d3d3'
-		
-	edge_weights_scale_factor = zscore_long['zscore'].max()/5
-	node_size_scale_factor = celltype_counts["Count"].max()/500
-	
-	import networkx as nx
-	G = nx.Graph()
-	
-	for _,row in zscore_long.iterrows():
-		G.add_edge(row['CellType1'], row['CellType2'], weight=row['zscore'])
-		
-	for _, row in celltype_counts.iterrows():
-		G.nodes[row['CellType']]['count'] = row['Count']
-		G.nodes[row['CellType']]['color'] = color_map.get(row['CellType'])
-		
-	node_sizes = [G.nodes[node]['count']/node_size_scale_factor for node in G.nodes]
-	node_colors = [G.nodes[node]['color'] for node in G.nodes]
-	edge_weights = [G[u][v]['weight'] for u, v in G.edges]
-	edge_weights = np.array(edge_weights)/edge_weights_scale_factor
-	
-	pos = nx.spring_layout(G, seed = seed, iterations=1000)
-	label_pos = {k: [v[0], v[1]-0.01] for k, v in pos.items()}  
-	
-	fig, ax = plt.subplots(figsize=(4,4),dpi=150)
-	nx.draw_networkx_edges(G, pos, width = edge_weights, edge_color='#a7a7a7')
-	nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color=node_colors, alpha = 0.8)
-	for node, coordinates in label_pos.items():
-		plt.text(coordinates[0], coordinates[1], s=node, fontsize=8, ha='center')
-	
-	# Create discrete legend for edge width
-	edge_bins = [1, 10, 20, 40]
-	edge_labels = ['<1', '10', '20', '40']
-	edge_size = edge_bins/edge_weights_scale_factor
-	edge_handles = [Line2D([0], [0], color='#a7a7a7', lw=w, label=label) for w, label in zip(edge_size, edge_labels)]
-	
-	# Create discrete legend for node size
-	size_bins = [500, 2500, 5000, 10000]
-	size_labels = ['500', '2500', '5000', '10000']
-	node_size = size_bins/node_size_scale_factor
-	size_handles = [Line2D([0], [0], marker='o', color='#808080', markersize=np.sqrt(size), label=label, linestyle='None') for size, label in zip(node_size, size_labels)]
-	
-	# Add legends to the plot
-	plt.legend(handles=edge_handles + size_handles, bbox_to_anchor = (1, 0.8), labelspacing = 0.8, frameon=False, fontsize=8)
-	
-	ax.spines['top'].set_visible(False)
-	ax.spines['right'].set_visible(False)
-	ax.spines['bottom'].set_visible(False)
-	ax.spines['left'].set_visible(False)
-	plt.show()
+def plot_network(
+    adata: "AnnData", 
+    df: pd.DataFrame, 
+    color_map: Optional[dict] = None, 
+    groupby: str = "celltype", 
+    highlight: Optional[List[str]] = None, 
+    seed: int = 1
+) -> None:
+    """
+    Plot a network graph based on cell type proximity enrichment frequency.
+
+    Parameters
+    ----------
+    adata : AnnData
+        An anndata object containing the data.
+    df : DataFrame
+        DataFrame containing interaction scores between cell types.
+    color_map : dict, optional
+        Dictionary mapping cell types to colors, by default None.
+    groupby : str, optional
+        Column name to group by, by default "celltype".
+    highlight : list, optional
+        List of cell types to highlight, by default None.
+    seed : int, optional
+        Random seed for layout reproducibility, by default 1.
+
+    Returns
+    -------
+    None
+    """
+    
+    celltype_counts = pd.DataFrame(adata.obs[groupby].value_counts()).reset_index()
+    celltype_counts.columns = ['CellType', "Count"]
+    
+    df.replace(0, 0.001, inplace=True)  # Add small values to facilitate the network visualization
+    df = df.reset_index()
+    zscore_long = pd.melt(df, id_vars=["index"], value_vars=df.columns)
+    zscore_long.columns = ['CellType1', 'CellType2', 'zscore']
+    zscore_long = zscore_long[zscore_long["CellType1"] != zscore_long["CellType2"]]
+    zscore_long = zscore_long.sort_values(by=['CellType1', 'CellType2']).reset_index(drop=True)
+    
+    if color_map is None:
+        celltypes = adata.obs[groupby].cat.categories
+        n = len(celltypes)
+        cmap = plt.get_cmap("tab20", lut=n)
+        ct_colors = [plt.cm.colors.rgb2hex(cmap(i)) for i in range(cmap.N)]
+        color_map = dict(zip(celltypes, ct_colors))
+        
+    if highlight:
+        for ct, color in color_map.items():
+            if ct in highlight:
+                color_map[ct] = color
+            else:
+                color_map[ct] = '#d3d3d3'
+        
+    edge_weights_scale_factor = zscore_long['zscore'].max() / 5
+    node_size_scale_factor = celltype_counts["Count"].max() / 500
+    
+    import networkx as nx
+    G = nx.Graph()
+    
+    for _, row in zscore_long.iterrows():
+        G.add_edge(row['CellType1'], row['CellType2'], weight=row['zscore'])
+        
+    for _, row in celltype_counts.iterrows():
+        G.nodes[row['CellType']]['count'] = row['Count']
+        G.nodes[row['CellType']]['color'] = color_map.get(row['CellType'])
+        
+    node_sizes = [G.nodes[node]['count'] / node_size_scale_factor for node in G.nodes]
+    node_colors = [G.nodes[node]['color'] for node in G.nodes]
+    edge_weights = [G[u][v]['weight'] for u, v in G.edges]
+    edge_weights = np.array(edge_weights) / edge_weights_scale_factor
+    
+    pos = nx.spring_layout(G, seed=seed, iterations=1000)
+    label_pos = {k: [v[0], v[1] - 0.01] for k, v in pos.items()}  
+    
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=150)
+    nx.draw_networkx_edges(G, pos, width=edge_weights, edge_color='#a7a7a7')
+    nx.draw_networkx_nodes(G, pos, node_size=node_sizes, node_color=node_colors, alpha=0.8)
+    for node, coordinates in label_pos.items():
+        plt.text(coordinates[0], coordinates[1], s=node, fontsize=8, ha='center')
+    
+    # Create discrete legend for edge width
+    edge_bins = [1, 10, 20, 40]
+    edge_labels = ['<1', '10', '20', '40']
+    edge_size = edge_bins / edge_weights_scale_factor
+    edge_handles = [Line2D([0], [0], color='#a7a7a7', lw=w, label=label) for w, label in zip(edge_size, edge_labels)]
+    
+    # Create discrete legend for node size
+    size_bins = [500, 2500, 5000, 10000]
+    size_labels = ['500', '2500', '5000', '10000']
+    node_size = size_bins / node_size_scale_factor
+    size_handles = [Line2D([0], [0], marker='o', color='#808080', markersize=np.sqrt(size), label=label, linestyle='None') for size, label in zip(node_size, size_labels)]
+    
+    # Add legends to the plot
+    plt.legend(handles=edge_handles + size_handles, bbox_to_anchor=(1, 0.8), labelspacing=0.8, frameon=False, fontsize=8)
+    
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    plt.show()
