@@ -3,6 +3,13 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../'))
+
+import src
+
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
@@ -17,6 +24,13 @@ release = '1.0.1'
 extensions = [
     # https://myst-nb.readthedocs.io
     "myst_nb",
+    'sphinx.ext.autosummary', 
+    "sphinx.ext.autodoc",
+    'sphinx.ext.napoleon',
+    "sphinx_autodoc_typehints",
+    "nbsphinx",
+    "sphinx_gallery.load_style",
+    "sphinx.ext.viewcode"
 ]
 source_suffix = [".rst", ".md"]
 
@@ -29,10 +43,7 @@ language = 'English'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "sphinx_rtd_theme"
-html_static_path = ["../build/_static"]
-html_css_files = [
-    'custom.css',
-]
+
 
 # myst-nb plotly
 html_js_files = [
@@ -51,5 +62,12 @@ suppress_warnings = ["mystnb.unknown_mime_type"]
 # Turn off notebooks execution
 nb_execution_mode = "off"
 
+nbsphinx_thumbnails = {
+    "docs/notebooks/Integration": "./docs/_images/integration.png",
+    "docs/notebooks/CN_analysis": "./docs/_images/CN.png",
+    "docs/notebooks/LR_analysis": "./docs/_images/LR.png",
+}
 
 myst_heading_anchors = 4
+html_show_sourcelink = False
+html_show_sphinx = False

@@ -1,7 +1,0 @@
-Exploration data analysis
-=========================
-
-.. toctree::
-   :maxdepth: 2
-
-   Integration 

@@ -16,5 +16,6 @@ facilitating investigations into cell-type composition, cell-cell interaction, a
 
    installation 
    docs/tutorials
+   api
 
    
