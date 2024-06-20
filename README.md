@@ -6,8 +6,6 @@ STIM provides a comprehensive computational pipeline for the integration and ana
 - Inferring ligand-receptor interactions
 
 ### Installation
-
-Installation using pip:\
 `pip install pySTIM` 
 
 ### Import
