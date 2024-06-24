@@ -13,4 +13,4 @@ Tutorials
 
    Inference of ligand-receptor interactions <notebooks/LR_analysis>
 
-   Core visualization functions <notebooks/visualization>
+   Core visualization functions <notebooks/Visualizations>
