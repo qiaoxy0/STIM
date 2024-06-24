@@ -190,7 +190,7 @@ def read_visiumHD(hd_dir: str, bins: Any = "all") -> Dict[str, sc.AnnData]:
 		
 	return adata_dict
 
-def load_xenium_baysor(data_dir):
+def load_xenium_baysor(data_dir: str) -> sc.AnnData:
     """
     Load Baysor segmented Xenium data.
 

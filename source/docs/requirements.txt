@@ -7,9 +7,13 @@ sphinx_gallery
 myst-nb
 anndata
 scanpy
+numpy
+fastparquet
+pyarrow
 scipy
 scikit-learn
 shapely
 descartes
 tifffile
 opencv-python
+imagecodecs

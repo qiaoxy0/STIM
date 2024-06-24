@@ -7,6 +7,15 @@ Import the package::
 
 .. automodule:: src.pySTIM
 
+
+IO
+~~
+.. autosummary::
+   :toctree: api
+
+   read_xenium
+   read_visiumHD
+
 Visualization
 ~~~~~~~~~~~~~
 
@@ -15,7 +24,7 @@ Visualization
 
     plot_scatter
     plot_scatter_img
-    plot_fov
+    plot_visiumHD
     plot_network
 
 Neighborhoods
