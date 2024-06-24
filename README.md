@@ -14,21 +14,9 @@ Installation using pip:\
 `import pySTIM as pst`
 
 ### Usage
-<br>
-***Cross-Modality Integration of Single-Cell Resolution Xenium In Situ Data and Whole Transcriptome Visium Data***: https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/Integration.ipynb
-<br>
+- **[Cross-Modality Integration of Single-Cell Resolution Xenium In Situ Data and Whole Transcriptome Visium Data](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/Integration.ipynb)**
+- **[Cell Neighborhoods Mapping and Functional Characterization](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/CN_analysis.ipynb)**
+- **[Inference of Ligand-Receptor Interactions](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/LR_analysis.ipynb)**
+- **[Core Visualization Functions](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/Visualizations.ipynb)**
 
-<br>
-***Cell Neighborhoods Mapping and Functional Characterization***: https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/CN_analysis.ipynb
-<br>
-
-<br>
-***Inference of ligand-receptor interactions***: https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/LR_analysis.ipynb
-<br>
-
-<br>
-***Core Visualization functions***: https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/Visualizations.ipynb
-<br>
-
-Please look at our [documentation](https://stim-tutorial.readthedocs.io/) with example usage. 
-
+For more detailed information and example usage, please visit our [documentation](https://stim-tutorial.readthedocs.io/).
