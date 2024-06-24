@@ -79,12 +79,10 @@
 <span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">matplotlib</span>
-<span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
 <span class="kn">from</span> <span class="nn">anndata</span> <span class="kn">import</span> <span class="n">AnnData</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
 <span class="kn">import</span> <span class="nn">matplotlib.font_manager</span> <span class="k">as</span> <span class="nn">fm</span>
-<span class="kn">from</span> <span class="nn">matplotlib.patches</span> <span class="kn">import</span> <span class="n">Rectangle</span>
 <span class="kn">from</span> <span class="nn">matplotlib.colors</span> <span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
 <span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1.anchored_artists</span> <span class="kn">import</span> <span class="n">AnchoredSizeBar</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -95,6 +93,210 @@
 <span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">to_hex</span><span class="p">,</span> <span class="n">crop</span><span class="p">,</span> <span class="n">get_color_map</span><span class="p">,</span> <span class="n">split_field</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
 
+<span class="k">def</span> <span class="nf">plot_polygon</span><span class="p">(</span><span class="n">adata</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> 
+                 <span class="n">plot_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cell&quot;</span><span class="p">,</span> 
+                 <span class="n">xlims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">ylims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">color_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">genes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">123</span><span class="p">,</span> 
+                 <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
+                 <span class="n">cmap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">ptsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> 
+                 <span class="n">ticks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
+                 <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+                 <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> 
+                 <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> 
+                 <span class="n">edgecolor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;#808080&quot;</span><span class="p">,</span> 
+                 <span class="n">linewidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">legend_col</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Plot polygons based on the provided adata.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - adata: A anndata object.</span>
+<span class="sd">    - plot_type: The type of plot (&#39;cell&#39;, &#39;gene&#39;, or &#39;transcript&#39;).</span>
+<span class="sd">    - xlims: Tuple containing the x-axis limits.</span>
+<span class="sd">    - ylims: Tuple containing the y-axis limits.</span>
+<span class="sd">    - color_by: Category from adata.obs by which to color the output.</span>
+<span class="sd">    - genes: Genes to be considered for &#39;gene&#39; or &#39;transcript&#39; plots.</span>
+<span class="sd">    - seed: Seed for random color generation.</span>
+<span class="sd">    - alpha: Opacity of polygons.</span>
+<span class="sd">    - cmap: Color map or a dictionary to map values to colors.</span>
+<span class="sd">    - ptsize: Size of points in the scatter plot.</span>
+<span class="sd">    - ticks: Whether to display axis ticks.</span>
+<span class="sd">    - dpi: Resolution.</span>
+<span class="sd">    - width: Width of the figure.</span>
+<span class="sd">    - height: Height of the figure.</span>
+<span class="sd">    - edgecolor: Color of the polygon edge.</span>
+<span class="sd">    - linewidth: Width of the polygon edge line.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    None: Displays the desired plot based on the given parameters.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Please create polygons first! To create polygons, please use the create_polygons function.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">poly_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
+        <span class="n">new_lib</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">poly_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+
+        <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of polygons: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_coord</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;cell&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">color_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#6699cc&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">))</span>
+
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span>
+             <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+            
+            <span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+                       <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;lower right&#39;</span><span class="p">,</span> 
+                       <span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                       <span class="n">sep</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+                       <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">size_vertical</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                       <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
+
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="n">color_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span>
+                           <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markers</span><span class="p">,</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                          <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                          <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;gene&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="n">genes</span><span class="p">]</span>
+
+            <span class="k">def</span> <span class="nf">create_gene_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">):</span>
+                <span class="c1"># c_max = np.quantile(counts, 0.99)</span>
+                <span class="n">c_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+                <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
+                <span class="n">bar_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bar_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bar_colors</span><span class="p">]</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_idx</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
+                    <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
+                <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span>
+                    <span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span>
+                    <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)]</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+                
+                <span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+                       <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;lower right&#39;</span><span class="p">,</span> 
+                       <span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                       <span class="n">sep</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+                       <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">size_vertical</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                       <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
+
+
+                <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">norm</span>
+
+            <span class="n">n_rows</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">n_cols</span> <span class="o">=</span> <span class="mi">3</span>
+
+            <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">n_cols</span> <span class="o">*</span> <span class="n">width</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">*</span> <span class="n">height</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
+            <span class="c1"># plt.subplots_adjust(hspace=0.5)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">create_gene_plot</span><span class="p">(</span><span class="n">axs</span><span class="p">,</span> <span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
+                <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span>
+                <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">axs</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">axs</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="n">axs</span><span class="p">):</span>
+                    <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">gene</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+                    <span class="n">norm</span> <span class="o">=</span> <span class="n">create_gene_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
+                    <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
+                    <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;5%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">n_rows</span> <span class="o">*</span> <span class="n">n_cols</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">),</span> <span class="n">n_rows</span> <span class="o">*</span> <span class="n">n_cols</span><span class="p">):</span>
+                    <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;transcript&quot;</span><span class="p">:</span>
+
+            <span class="n">mol_data</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;transcript&#39;</span><span class="p">]</span>
+            <span class="n">cell_id_keep</span> <span class="o">=</span> <span class="n">new_coord</span><span class="o">.</span><span class="n">cell_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="n">mol_data2</span> <span class="o">=</span> <span class="n">mol_data</span><span class="p">[</span><span class="n">mol_data</span><span class="o">.</span><span class="n">cell_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cell_id_keep</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">mol_data</span><span class="o">.</span><span class="n">feature_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">genes</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+                <span class="n">tx_col</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#&quot;</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;0123456789ABCDEF&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)])</span>
+                          <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">))]</span>
+                <span class="n">map_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">genes</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span> <span class="n">tx_col</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">))}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">map_dict</span> <span class="o">=</span> <span class="n">cmap</span>
+
+            <span class="n">all_tx</span> <span class="o">=</span> <span class="n">mol_data2</span><span class="p">[</span><span class="s1">&#39;feature_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+            <span class="n">all_tx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_tx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;colors&#39;</span><span class="p">])</span>
+            <span class="n">all_tx</span> <span class="o">=</span> <span class="n">all_tx</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="s1">&#39;colors&#39;</span><span class="p">:</span> <span class="n">map_dict</span><span class="p">})</span>
+
+            <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="p">[</span><span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="s1">&#39;#fcfcfa&#39;</span><span class="p">,</span> <span class="n">ec</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">))</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span>
+             <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)]</span>
+            <span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
+                       <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;lower right&#39;</span><span class="p">,</span> 
+                       <span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+                       <span class="n">sep</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                       <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
+                       <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                       <span class="n">size_vertical</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                       <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
+
+
+            <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mol_data2</span><span class="o">.</span><span class="n">x_location</span><span class="p">,</span> <span class="n">mol_data2</span><span class="o">.</span><span class="n">y_location</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">all_tx</span><span class="o">.</span><span class="n">colors</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ptsize</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+            <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markers</span><span class="p">,</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+                      <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                      <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            
+
+
 <div class="viewcode-block" id="plot_scatter">
 <a class="viewcode-back" href="../../../api/src.pySTIM.plot_scatter.html#src.pySTIM.plot_scatter">[docs]</a>
 <span class="k">def</span> <span class="nf">plot_scatter</span><span class="p">(</span>
@@ -102,8 +304,6 @@
     <span class="n">xlims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">ylims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">color_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">highlight_cell</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">highlight_color</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;#FC4B42&#39;</span><span class="p">,</span> 
     <span class="n">genes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">123</span><span class="p">,</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
@@ -111,7 +311,8 @@
     <span class="n">ptsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
     <span class="n">ticks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
-    <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="mi">5</span><span class="p">),</span>
+    <span class="n">width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="n">height</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
     <span class="n">legend_loc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
     <span class="n">legend_col</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
     <span class="n">bbox_to_anchor</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
@@ -119,7 +320,7 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scatter plot of spatial omics data based on AnnData object.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    adata : sc.AnnData</span>
@@ -130,10 +331,6 @@
 <span class="sd">        The y-axis limits for cropping, by default None.</span>
 <span class="sd">    color_by : str, optional</span>
 <span class="sd">        The column to color by, by default None.</span>
-<span class="sd">    highlight_cell : str, optional</span>
-<span class="sd">        Cell type to highlight, by default None.</span>
-<span class="sd">    highlight_color : str, optional</span>
-<span class="sd">        Color for the highlighted cells, by default &#39;#FC4B42&#39;.</span>
 <span class="sd">    genes : Union[str, List[str]], optional</span>
 <span class="sd">        Gene to plot, by default None.</span>
 <span class="sd">    seed : int, optional</span>
@@ -148,8 +345,10 @@
 <span class="sd">        Whether to show ticks on the plot, by default False.</span>
 <span class="sd">    dpi : int, optional</span>
 <span class="sd">        Resolution for the plot, by default 300.</span>
-<span class="sd">    figsize : tuple, optional</span>
-<span class="sd">        Size of the figure, by default (5, 5).</span>
+<span class="sd">    width : int, optional</span>
+<span class="sd">        Width of the plot, by default 5.</span>
+<span class="sd">    height : int, optional</span>
+<span class="sd">        Height of the plot, by default 5.</span>
 <span class="sd">    legend_loc : str, optional</span>
 <span class="sd">        Location of the legend, by default &quot;center left&quot;.</span>
 <span class="sd">    legend_col : int, optional</span>
@@ -158,16 +357,15 @@
 <span class="sd">        Bounding box to anchor the legend, by default (1.0, 0.5).</span>
 <span class="sd">    save : str, optional</span>
 <span class="sd">        Filename to save the plot to, by default None.</span>
-<span class="sd">    highlight_cells : List[str], optional</span>
-<span class="sd">        List of cell types to highlight, by default None.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    None</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span> <span class="nf">plot</span><span class="p">(</span>
         <span class="n">ax</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Axes</span><span class="p">,</span>
+        <span class="n">group</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> 
         <span class="n">new_coord</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> 
         <span class="n">colors</span><span class="p">,</span> 
         <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span> 
@@ -192,47 +390,60 @@
         <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
 
-    <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
-        <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">ident</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">categories</span><span class="p">)</span>
+
+    <span class="n">n_rows</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">/</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_cols</span> <span class="o">=</span> <span class="mi">6</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+        <span class="n">nrows</span><span class="o">=</span><span class="n">n_rows</span><span class="p">,</span>
+        <span class="n">ncols</span><span class="o">=</span><span class="n">n_cols</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">n_cols</span> <span class="o">*</span> <span class="n">width</span><span class="p">,</span> <span class="n">n_rows</span> <span class="o">*</span> <span class="n">height</span><span class="p">),</span>
         <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span>
         <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;constrained&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">genes</span><span class="p">:</span>
-        
-        <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
-        <span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
-        <span class="n">coords</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span>
-            <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
-        <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
-        <span class="n">colors</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">highlight_cell</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">highlight_cell</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">highlight_cell</span> <span class="o">=</span> <span class="p">[</span><span class="n">highlight_cell</span><span class="p">]</span>
-            <span class="n">mask</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">highlight_cell</span><span class="p">)</span>
-            <span class="n">colors</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s1">&#39;#BFBFBF&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-            <span class="n">colors</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">highlight_color</span>
-
-        <span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-        
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">highlight_cell</span><span class="p">:</span>
-            <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+            <span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span>
+                <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
+            <span class="n">colors</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">)</span>
+            <span class="n">plot</span><span class="p">(</span><span class="n">axs</span><span class="p">,</span> <span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coords</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">highlight_color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)]</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="n">highlight_cell</span>
-        
+            <span class="n">axs</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">axs</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">ident</span> <span class="o">==</span> <span class="n">g</span><span class="p">]</span>
+                <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+                <span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
+                <span class="n">colors</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">)</span>
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span>
+                    <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
+                <span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="p">:]:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="p">]</span>
         <span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
-                    <span class="n">markers</span><span class="p">,</span>
-                    <span class="n">labels</span><span class="p">,</span>
-                    <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">,</span>
-                    <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">bbox_to_anchor</span><span class="p">,</span>
-                    <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">,</span>
-                <span class="p">)</span>
-        
+            <span class="n">markers</span><span class="p">,</span>
+            <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span>
+            <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">,</span>
+            <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">bbox_to_anchor</span><span class="p">,</span>
+            <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">,</span> <span class="n">transparent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
 
@@ -242,217 +453,84 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="n">genes</span><span class="p">]</span>
 
-        <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
-        <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+            <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
 
-        <span class="n">cmap</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
 
-        <span class="n">c_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">)</span>
-        <span class="n">c_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
-        <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
-        <span class="n">bar_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bar_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bar_colors</span><span class="p">]</span>
-        <span class="n">all_colors_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_idx</span><span class="p">]</span>
+            <span class="n">c_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">)</span>
+            <span class="n">c_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+            <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
+            <span class="n">bar_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bar_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bar_colors</span><span class="p">]</span>
+            <span class="n">all_colors_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_idx</span><span class="p">]</span>
 
-        <span class="n">coords</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span>
-            <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
-        <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span>
+                <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
 
-        <span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">all_colors_list</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-        
-        <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">c_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
-        <span class="n">cbar_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">1.05</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
-        <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
-            <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span>
-        <span class="p">)</span>
+            <span class="n">plot</span><span class="p">(</span><span class="n">axs</span><span class="p">,</span><span class="n">group</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">coords</span><span class="p">,</span><span class="n">all_colors_list</span><span class="p">,</span><span class="n">alpha</span><span class="p">,</span><span class="n">ptsize</span><span class="p">,</span><span class="n">ticks</span><span class="p">)</span>
+            
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">c_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
+            <span class="n">cbar_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">1.05</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
+                <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c_max_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">c_min_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">axs</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">axs</span><span class="p">):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">ident</span> <span class="o">==</span> <span class="n">g</span><span class="p">]</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+                <span class="n">c_max_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span>
+                <span class="n">c_min_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span>
+
+            <span class="n">c_max</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">c_max_list</span><span class="p">)</span>
+            <span class="n">c_min</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">c_min_list</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">g</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()):</span>
+                <span class="n">tmp</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">ident</span> <span class="o">==</span> <span class="n">g</span><span class="p">]</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+                <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
+
+                <span class="n">cmap</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
+
+                <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
+                <span class="n">bar_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bar_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bar_colors</span><span class="p">]</span>
+
+                <span class="n">coords</span> <span class="o">=</span> <span class="n">tmp</span><span class="p">[</span>
+                    <span class="n">new_coord</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+                <span class="p">]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span>
+
+                <span class="n">all_colors_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_idx</span><span class="p">]</span>
+                <span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">all_colors_list</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="p">:]:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">c_min</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
+            <span class="n">cbar_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">1.02</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.005</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+            <span class="n">cb</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span>
+                <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span>
+                <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span><span class="p">,</span>
+                <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">			if n_rows == 1:</span>
+<span class="sd">				fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axs[:], shrink=0.6, location=&quot;right&quot;)</span>
+<span class="sd">			else:</span>
+<span class="sd">				fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axs[:, :], shrink=0.6, location=&quot;right&quot;)</span>
+<span class="sd">			&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
 
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-
-<span class="k">def</span> <span class="nf">plot_polygon</span><span class="p">(</span><span class="n">adata</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> 
-                 <span class="n">plot_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cell&quot;</span><span class="p">,</span> 
-                 <span class="n">xlims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">ylims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">color_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">genes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">123</span><span class="p">,</span> 
-                 <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">,</span>
-                 <span class="n">cmap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
-                 <span class="n">ptsize</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span> 
-                 <span class="n">ticks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
-                 <span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
-                 <span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> 
-                 <span class="n">edgecolor</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;#808080&quot;</span><span class="p">,</span> 
-                 <span class="n">linewidth</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span>
-                 <span class="n">legend_col</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-                 <span class="n">save</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Plot polygons based on the provided adata object.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    adata : Any</span>
-<span class="sd">        An AnnData object containing the data.</span>
-<span class="sd">    plot_type : str, optional</span>
-<span class="sd">        The type of plot (&#39;cell&#39;, &#39;gene&#39;, or &#39;transcript&#39;), by default &quot;cell&quot;.</span>
-<span class="sd">    xlims : tuple, optional</span>
-<span class="sd">        The x-axis limits for cropping, by default None.</span>
-<span class="sd">    ylims : tuple, optional</span>
-<span class="sd">        The y-axis limits for cropping, by default None.</span>
-<span class="sd">    color_by : str, optional</span>
-<span class="sd">        The column from adata.obs to color by, by default None.</span>
-<span class="sd">    genes : Union[str, List[str]], optional</span>
-<span class="sd">        Genes to be considered for &#39;gene&#39; or &#39;transcript&#39; plots, by default None.</span>
-<span class="sd">    seed : int, optional</span>
-<span class="sd">        Seed for random color generation, by default 123.</span>
-<span class="sd">    alpha : float, optional</span>
-<span class="sd">        Opacity of the polygons, by default 0.8.</span>
-<span class="sd">    cmap : Union[str, Dict[str, str]], optional</span>
-<span class="sd">        Color map or a dictionary to map values to colors, by default None.</span>
-<span class="sd">    ptsize : float, optional</span>
-<span class="sd">        Size of points in the scatter plot, by default 0.01.</span>
-<span class="sd">    ticks : bool, optional</span>
-<span class="sd">        Whether to display axis ticks, by default False.</span>
-<span class="sd">    dpi : int, optional</span>
-<span class="sd">        Resolution of the plot, by default 300.</span>
-<span class="sd">    figsize : tuple, optional</span>
-<span class="sd">        Size of the figure, by default (5, 5).</span>
-<span class="sd">    edgecolor : str, optional</span>
-<span class="sd">        Color of the polygon edge, by default &quot;#808080&quot;.</span>
-<span class="sd">    linewidth : float, optional</span>
-<span class="sd">        Width of the polygon edge line, by default 0.2.</span>
-<span class="sd">    legend_col : int, optional</span>
-<span class="sd">        Number of columns in the legend, by default 2.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    None</span>
-<span class="sd">        Displays the desired plot based on the given parameters.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;poly&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Please create polygons first! To create polygons, please use the create_polygons function.&#39;</span><span class="p">)</span>
-        <span class="k">return</span>
-
-    <span class="n">poly_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())}</span>
-    <span class="n">new_lib</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">poly_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-    <span class="n">subset_idx</span><span class="p">,</span> <span class="n">new_coord</span> <span class="o">=</span> <span class="n">crop</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Total number of polygons: &quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_coord</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">add_scalebar</span><span class="p">(</span><span class="n">ax</span><span class="p">):</span>
-        <span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
-                                   <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;lower left&#39;</span><span class="p">,</span> 
-                                   <span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                                   <span class="n">sep</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-                                   <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-                                   <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                   <span class="n">size_vertical</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-                                   <span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">plot_cells</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_lib</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">ticks</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">):</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">))</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
-        <span class="n">add_scalebar</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;cell&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">color_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#6699cc&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">seed</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">)</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-        <span class="n">plot_cells</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_lib</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">color_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markers</span><span class="p">,</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;gene&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="n">genes</span><span class="p">]</span>
-
-        <span class="k">def</span> <span class="nf">create_gene_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">):</span>
-            <span class="n">c_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">)</span>
-            <span class="n">bar_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">cmap</span><span class="p">(</span><span class="n">c</span> <span class="o">/</span> <span class="n">c_max</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">counts</span><span class="p">]</span>
-            <span class="n">bar_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">bar_colors</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">all_colors</span> <span class="o">=</span> <span class="p">[</span><span class="n">to_hex</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">bar_colors</span><span class="p">]</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">subset_idx</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">gene</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">):</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">PolygonPatch</span><span class="p">(</span><span class="n">new_lib</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fc</span><span class="o">=</span><span class="n">cols</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">ec</span><span class="o">=</span><span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">linewidth</span><span class="p">))</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
-            <span class="n">add_scalebar</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-            <span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">c_max</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">norm</span>
-
-        <span class="n">n_rows</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span>
-        <span class="n">n_cols</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;#f2f2f2&#39;</span><span class="p">,</span> <span class="s1">&#39;#ffdbdb&#39;</span><span class="p">,</span> <span class="s1">&#39;#fc0303&#39;</span><span class="p">])</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">n_rows</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">n_cols</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
-            <span class="n">norm</span> <span class="o">=</span> <span class="n">create_gene_plot</span><span class="p">(</span><span class="n">axs</span><span class="p">,</span> <span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-            <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">axs</span><span class="p">)</span>
-            <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;3%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-            <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">axs</span> <span class="o">=</span> <span class="n">axs</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">gene</span><span class="p">,</span> <span class="n">ax</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="n">axs</span><span class="p">):</span>
-                <span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">gene</span><span class="p">)</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
-                <span class="n">norm</span> <span class="o">=</span> <span class="n">create_gene_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-                <span class="n">divider</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span>
-                <span class="n">cax</span> <span class="o">=</span> <span class="n">divider</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;3%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
-                <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">genes</span><span class="p">),</span> <span class="n">n_rows</span> <span class="o">*</span> <span class="n">n_cols</span><span class="p">):</span>
-                <span class="n">fig</span><span class="o">.</span><span class="n">delaxes</span><span class="p">(</span><span class="n">axs</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-        
-        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="k">elif</span> <span class="n">plot_type</span> <span class="o">==</span> <span class="s2">&quot;transcript&quot;</span><span class="p">:</span>
-        <span class="n">mol_data</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;transcript&#39;</span><span class="p">]</span>
-        <span class="n">cell_id_keep</span> <span class="o">=</span> <span class="n">new_coord</span><span class="o">.</span><span class="n">cell_id</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-        <span class="n">mol_data2</span> <span class="o">=</span> <span class="n">mol_data</span><span class="p">[</span><span class="n">mol_data</span><span class="o">.</span><span class="n">cell_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cell_id_keep</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">mol_data</span><span class="o">.</span><span class="n">feature_name</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">genes</span><span class="p">)]</span>
-        <span class="k">if</span> <span class="n">cmap</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-            <span class="n">tx_col</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;#&quot;</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;0123456789ABCDEF&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">)])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">genes</span><span class="p">]</span>
-            <span class="n">map_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="n">tx_col</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">map_dict</span> <span class="o">=</span> <span class="n">cmap</span>
-
-        <span class="n">all_tx</span> <span class="o">=</span> <span class="n">mol_data2</span><span class="p">[</span><span class="s1">&#39;feature_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
-        <span class="n">all_tx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">all_tx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;colors&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="s1">&#39;colors&#39;</span><span class="p">:</span> <span class="n">map_dict</span><span class="p">})</span>
-
-        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">)</span>
-        <span class="n">plot_cells</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_lib</span><span class="p">,</span> <span class="n">subset_idx</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;#fcfcfa&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">),</span> <span class="n">edgecolor</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">linewidth</span><span class="p">,</span> <span class="n">ticks</span><span class="p">)</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">mol_data2</span><span class="o">.</span><span class="n">x_location</span><span class="p">,</span> <span class="n">mol_data2</span><span class="o">.</span><span class="n">y_location</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">all_tx</span><span class="o">.</span><span class="n">colors</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="n">ptsize</span><span class="p">)</span>
-        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markers</span><span class="p">,</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;center left&#39;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <div class="viewcode-block" id="plot_scatter_img">
 <a class="viewcode-back" href="../../../api/src.pySTIM.plot_scatter_img.html#src.pySTIM.plot_scatter_img">[docs]</a>
@@ -474,7 +552,6 @@
     <span class="n">image_key</span><span class="o">=</span><span class="s2">&quot;spatial&quot;</span><span class="p">,</span>
     <span class="n">img_alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
     <span class="n">bbox_to_anchor</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
-    <span class="n">save</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scatter plot of spatial omics data based on AnnData object with optional registered background image.</span>
@@ -590,8 +667,7 @@
             <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         
@@ -630,8 +706,6 @@
             <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span><span class="p">,</span>
             <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;vertical&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
 
@@ -684,191 +758,6 @@
         
     <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-<span class="k">def</span> <span class="nf">plot_visiumHD</span><span class="p">(</span><span class="n">adata</span><span class="p">:</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">,</span>
-					<span class="n">genes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[],</span>
-					<span class="n">color_by</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-					<span class="n">cmap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Colormap</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-					<span class="n">bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
-					<span class="n">ticks</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-					<span class="n">legend_loc</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
-					<span class="n">bbox_to_anchor</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
-					<span class="n">scale_bar</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-					<span class="n">scale</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
-					<span class="n">legend_col</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-					<span class="n">image</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-					<span class="n">library_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
-					<span class="n">crop</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-					<span class="n">xlims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-					<span class="n">ylims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-					<span class="n">dpi</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
-					<span class="n">figsize</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-					<span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
-					<span class="n">cutoff</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-					<span class="n">save</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">		</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">		Plots spatial data from VisiumHD technology.</span>
-<span class="sd">		</span>
-<span class="sd">		Parameters:</span>
-<span class="sd">		- adata (sc.AnnData): The annotated data matrix to plot.</span>
-<span class="sd">		- genes (List[str]): List of genes to visualize.</span>
-<span class="sd">		- color_by (Optional[str]): Column name to color cells by.</span>
-<span class="sd">		- cmap (Optional[matplotlib.colors.Colormap]): Colormap for cell coloring.</span>
-<span class="sd">		- bin_size (int): Bin size for scaling spatial coordinates.</span>
-<span class="sd">		- ticks (bool): If True, display axis ticks.</span>
-<span class="sd">		- legend_loc (str): Location of the legend.</span>
-<span class="sd">		- bbox_to_anchor (Tuple[float, float]): Bounding box to anchor the legend.</span>
-<span class="sd">        - scale_bar (bool): If True, add scalebar. </span>
-<span class="sd">		- legend_col (int): Number of columns in the legend.</span>
-<span class="sd">		- image (bool): If True, display underlying tissue image.</span>
-<span class="sd">		- library_id (str): Identifier for the library to plot.</span>
-<span class="sd">		- crop (bool): If True, crop the image to specified limits.</span>
-<span class="sd">		- xlims (Optional[Tuple[float, float]]): X-axis limits for cropping.</span>
-<span class="sd">		- ylims (Optional[Tuple[float, float]]): Y-axis limits for cropping.</span>
-<span class="sd">		- seed (int): Seed for random processes.</span>
-<span class="sd">		- cutoff (int): Minimum expression level to display.</span>
-<span class="sd">		- save (Optional[str]): Path to save the plot image.</span>
-<span class="sd">		</span>
-<span class="sd">		Returns:</span>
-<span class="sd">		None. </span>
-<span class="sd">		&quot;&quot;&quot;</span>
-			
-		<span class="c1">### helper functions</span>
-		<span class="k">def</span> <span class="nf">to_hex</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">):</span>
-			<span class="k">return</span> <span class="s1">&#39;#</span><span class="si">{:02x}{:02x}{:02x}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">rgb_tuple</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span><span class="p">))</span>
-		
-		<span class="k">def</span> <span class="nf">add_scalebar</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-			<span class="n">scalebar</span> <span class="o">=</span> <span class="n">AnchoredSizeBar</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">transData</span><span class="p">,</span>
-										<span class="n">scale</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;lower left&#39;</span><span class="p">,</span> 
-										<span class="n">pad</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-										<span class="n">sep</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
-										<span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span>
-										<span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-										<span class="n">size_vertical</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-										<span class="n">fontproperties</span><span class="o">=</span><span class="n">fm</span><span class="o">.</span><span class="n">FontProperties</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">))</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">scalebar</span><span class="p">)</span>
-			
-		<span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_spatial</span><span class="p">,</span> <span class="n">new_coord</span><span class="p">,</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">ticks</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
-				
-			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">new_coord</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
-				<span class="n">new_x</span><span class="p">,</span> <span class="n">new_y</span> <span class="o">=</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_coord</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-				<span class="n">rect</span> <span class="o">=</span> <span class="n">Rectangle</span><span class="p">((</span><span class="n">new_x</span><span class="p">,</span> <span class="n">new_y</span><span class="p">),</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-				<span class="n">ax</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">rect</span><span class="p">)</span>
-				
-			<span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][</span><span class="s2">&quot;images&quot;</span><span class="p">][</span><span class="s1">&#39;hires&#39;</span><span class="p">])</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">new_spatial</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">new_spatial</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">new_spatial</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">new_spatial</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
-				
-			<span class="k">if</span> <span class="n">scale_bar</span><span class="p">:</span>
-				<span class="n">add_scalebar</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-			
-		<span class="n">scale_factor</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][</span><span class="s2">&quot;scalefactors&quot;</span><span class="p">][</span><span class="s1">&#39;tissue_hires_scalef&#39;</span><span class="p">]</span>
-		<span class="n">spatial_coords</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">scale_factor</span>
-		<span class="n">json_data</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">][</span><span class="s1">&#39;scalefactors&#39;</span><span class="p">]</span>
-		<span class="n">px_width</span> <span class="o">=</span> <span class="n">bin_size</span> <span class="o">/</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;microns_per_pixel&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;tissue_hires_scalef&#39;</span><span class="p">]</span>
-		<span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">/</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;microns_per_pixel&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">json_data</span><span class="p">[</span><span class="s1">&#39;tissue_hires_scalef&#39;</span><span class="p">]</span>	
-		<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="n">figsize</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="n">dpi</span><span class="p">)</span>
-		
-		<span class="k">if</span> <span class="ow">not</span> <span class="n">ticks</span><span class="p">:</span>
-			<span class="n">plt</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelleft</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labelbottom</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
-		
-		<span class="k">if</span> <span class="n">image</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
-				<span class="n">subset_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">spatial_coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">spatial_coords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&amp;</span> 
-									  <span class="p">(</span><span class="n">spatial_coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">ylims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">spatial_coords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">ylims</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>			
-			<span class="k">else</span><span class="p">:</span>
-				<span class="n">subset_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">spatial_coords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-				
-			<span class="n">new_spatial</span> <span class="o">=</span> <span class="n">spatial_coords</span><span class="p">[</span><span class="n">subset_idx</span><span class="p">]</span>
-		
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">genes</span><span class="p">:</span>
-				<span class="n">map_dict</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>  <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="o">=</span><span class="n">subset_idx</span><span class="p">)</span>
-			
-				<span class="n">all_colors</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_dict</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-				<span class="n">colors</span> <span class="o">=</span> <span class="n">all_colors</span><span class="p">[</span><span class="n">subset_idx</span><span class="p">]</span>
-				<span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_spatial</span><span class="p">,</span> <span class="n">new_spatial</span><span class="p">,</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">ticks</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-				<span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">color</span> <span class="ow">in</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-				<span class="n">fig</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">markers</span><span class="p">,</span> <span class="n">map_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">bbox_to_anchor</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-							<span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
-		
-			<span class="k">else</span><span class="p">:</span>
-				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-					<span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="n">genes</span><span class="p">]</span>
-					
-				<span class="n">counts</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-				<span class="n">filtered_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">counts</span> <span class="o">&gt;=</span> <span class="n">cutoff</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-				<span class="n">filtered_subset_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">intersect1d</span><span class="p">(</span><span class="n">subset_idx</span><span class="p">,</span> <span class="n">filtered_idx</span><span class="p">)</span>
-				<span class="n">new_coord</span> <span class="o">=</span> <span class="n">adata</span><span class="p">[</span><span class="n">filtered_subset_idx</span><span class="p">,]</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="o">*</span> <span class="n">scale_factor</span>
-				<span class="n">cmap</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>  <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">,</span> <span class="n">subset_idx</span><span class="o">=</span><span class="n">subset_idx</span><span class="p">)</span>
-				<span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">counts</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">counts</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span>
-				<span class="n">mapper</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
-				
-				<span class="n">rgba_colors</span> <span class="o">=</span> <span class="n">mapper</span><span class="o">.</span><span class="n">to_rgba</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
-				<span class="n">all_colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">rgba_colors</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-				<span class="n">hex_colors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="s1">&#39;#</span><span class="si">{:02x}{:02x}{:02x}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">all_colors</span><span class="p">)</span>
-				<span class="n">colors</span> <span class="o">=</span> <span class="n">hex_colors</span><span class="p">[</span><span class="n">filtered_subset_idx</span><span class="p">]</span>
-				
-				<span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">new_spatial</span><span class="p">,</span> <span class="n">new_coord</span><span class="p">,</span> <span class="n">px_width</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">ticks</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-				<span class="n">cbar_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
-				<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mapper</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span><span class="p">)</span>
-
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">pxl_rows</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;array_row&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-			<span class="n">pxl_cols</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;array_col&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-			<span class="n">max_row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pxl_rows</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-			<span class="n">max_col</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pxl_cols</span><span class="p">))</span> <span class="o">+</span> <span class="mi">1</span>
-			<span class="n">expression_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">max_row</span><span class="p">,</span> <span class="n">max_col</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
-			<span class="k">if</span> <span class="n">genes</span><span class="p">:</span>
-				<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">genes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-					<span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="n">genes</span><span class="p">]</span>
-				<span class="n">data</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">obs_df</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="n">genes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>	
-			<span class="k">else</span><span class="p">:</span>
-				<span class="n">data</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">color_by</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-				
-			<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pxl_rows</span><span class="p">)):</span>
-				<span class="n">row</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pxl_rows</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-				<span class="n">col</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pxl_cols</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-				<span class="n">expression_grid</span><span class="p">[</span><span class="n">row</span><span class="p">:</span><span class="n">row</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="p">:</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-			
-			<span class="k">if</span> <span class="n">genes</span><span class="p">:</span>
-				<span class="n">norm</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanmin</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">vmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nanquantile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">))</span>
-				<span class="n">cmap</span> <span class="o">=</span> <span class="n">get_color_map</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="n">color_by</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>  <span class="n">genes</span><span class="o">=</span><span class="n">genes</span><span class="p">)</span>
-				<span class="n">heatmap</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">expression_grid</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
-				<span class="n">cbar_ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
-				<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cbar_ax</span><span class="p">)</span>
-				
-			<span class="k">else</span><span class="p">:</span>
-				<span class="n">unique_categories</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-				<span class="n">num_categories</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_categories</span><span class="p">)</span>
-
-				<span class="n">colors</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s2">&quot;tab20b&quot;</span><span class="p">,</span> <span class="n">num_categories</span><span class="p">)</span> <span class="k">if</span> <span class="n">num_categories</span> <span class="o">&lt;=</span> <span class="mi">20</span> <span class="k">else</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s2">&quot;tab20b&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span> <span class="o">+</span> <span class="n">sns</span><span class="o">.</span><span class="n">color_palette</span><span class="p">(</span><span class="s2">&quot;tab20c&quot;</span><span class="p">,</span> <span class="n">num_categories</span> <span class="o">-</span> <span class="mi">20</span><span class="p">)</span>
-				<span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">ListedColormap</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
-				<span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_categories</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
-				<span class="n">norm</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">BoundaryNorm</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">cmap</span><span class="o">.</span><span class="n">N</span><span class="p">)</span>
-				
-				<span class="n">heatmap</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">expression_grid</span><span class="p">,</span> <span class="n">aspect</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s1">&#39;lower&#39;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s1">&#39;none&#39;</span><span class="p">)</span>
-				
-				<span class="n">handles</span> <span class="o">=</span> <span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">unique_categories</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
-															<span class="n">markersize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">markerfacecolor</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_categories</span><span class="p">)]</span>
-				<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="o">=</span><span class="n">handles</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">legend_loc</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="n">bbox_to_anchor</span><span class="p">,</span> <span class="n">frameon</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ncol</span><span class="o">=</span><span class="n">legend_col</span><span class="p">)</span>
-				
-			<span class="n">ax</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;scaled&#39;</span><span class="p">)</span>
-			<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-			
-			<span class="c1"># Crop the axes if required</span>
-			<span class="k">if</span> <span class="n">crop</span><span class="p">:</span>
-				<span class="nb">print</span><span class="p">(</span><span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span><span class="p">)</span>
-				<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xlims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xlims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-				<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ylims</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ylims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-	
-		<span class="k">if</span> <span class="n">save</span><span class="p">:</span>
-			<span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
-		
-		<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">plot_compare</span><span class="p">(</span><span class="n">adata_xe</span><span class="p">,</span> <span class="n">Xenium_agg_gene_df</span><span class="p">,</span> <span class="n">adata_vis</span><span class="p">,</span> <span class="n">gene</span><span class="p">,</span> <span class="n">cmap</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 
