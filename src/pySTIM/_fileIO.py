@@ -1,4 +1,5 @@
 import os
+import json
 import anndata
 import tarfile
 import scanpy as sc
@@ -89,7 +90,7 @@ def read_xenium(xenium_path: str) -> sc.AnnData:
 
 def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	"""
-	Reads VisiumHD layers.
+	Reads VisiumHD layers, optionally including UMAP and cluster data if available.
 
 	Parameters:
 	- hd_dir (str): The VisiumHD directory.
@@ -99,7 +100,8 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	- sc.AnnData: An annotated data object.
 	"""
 	
-	def compute_corner_points(df, px_width, cell_col='barcode', x_col='pxl_row_in_fullres', y_col='pxl_col_in_fullres'):
+	def compute_corner_points(df: pd.DataFrame, px_width: float, cell_col='barcode',
+								x_col='pxl_row_in_fullres', y_col='pxl_col_in_fullres') -> pd.DataFrame:
 		corner_coordinates = {
 			'new_x': df[x_col] - 0.5 * px_width,
 			'new_y': df[y_col] - 0.5 * px_width,
@@ -113,44 +115,51 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	json_file = os.path.join(layer_dir, "spatial/scalefactors_json.json")
 	
 	layer_data = sc.read_10x_h5(h5_file)
-	
-	all_cells = set(layer_data.obs_names)
+	layer_data.var_names_make_unique()
 	
 	pos = pd.read_parquet(pos_file)
+	all_cells = set(layer_data.obs_names)
 	pos = pos[pos['barcode'].isin(all_cells) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
+	
+	pos.index = pos['barcode']
+	pos = pos.loc[layer_data.obs.index, ]
+	layer_data.obs = layer_data.obs.join(pos)
 	
 	with open(json_file) as f:
 		json_data = json.load(f)
 		
-	umap_path = os.path.join(layer_dir, 'analysis/umap/gene_expression_2_components/projection.csv')
-	clusters_path = os.path.join(layer_dir, 'analysis/clustering/gene_expression_graphclust/clusters.csv')
-	umap = pd.read_csv(umap_path)
-	clusters = pd.read_csv(clusters_path)
-	
-	umap.index = umap['Barcode']
-	cells_keep = umap.index.to_list()
-	layer_data = layer_data[layer_data.obs.index.isin(cells_keep)]
-	layer_data.obsm["X_umap"] = umap.loc[layer_data.obs.index, ["UMAP-1", "UMAP-2"]].to_numpy()
-	pos.index = pos['barcode'] 
-	pos = pos.loc[layer_data.obs.index, ]
-	layer_data.obs = layer_data.obs.join(pos)
-
-	clusters.index = clusters['Barcode']
-	layer_data.obs["cluster"] = clusters.loc[layer_data.obs.index, "Cluster"].to_numpy()
-	
+	# Adjust for bin_size in spatial resolution
 	px_width = bin_size / json_data["microns_per_pixel"]
 	corner_coordinates = compute_corner_points(pos, px_width)
+	layer_data.obsm["spatial"] = corner_coordinates[['new_y', 'new_x']].values
+	
+	# Load UMAP and clusters if available
+	if not os.path.exists(layer_dir + "/analysis"):
+		print(f"No analysis directory for bin size {bin_size}.")
+		
+	umap_path = os.path.join(layer_dir, 'analysis/umap/gene_expression_2_components/projection.csv')
+	clusters_path = os.path.join(layer_dir, 'analysis/clustering/gene_expression_graphclust/clusters.csv')
+	
+	if os.path.exists(umap_path) and os.path.exists(clusters_path):
+		umap = pd.read_csv(umap_path)
+		clusters = pd.read_csv(clusters_path)
+		umap.index = umap['Barcode']
+		clusters.index = clusters['Barcode']
+		
+		# Filter AnnData based on cells present in UMAP
+		cells_keep = umap.index.intersection(layer_data.obs_names)
+		layer_data = layer_data[cells_keep]
+		layer_data.obsm["X_umap"] = umap.loc[cells_keep, ["UMAP-1", "UMAP-2"]].copy().to_numpy()
+		layer_data.obs["cluster"] = clusters.loc[cells_keep, "Cluster"].copy().to_numpy()
+	
 	
 	layer_data.uns['spatial'] = {
 			'scalefactors': json_data,
-		}
-	
-	layer_data.obsm["spatial"] = corner_coordinates[['new_y', 'new_x']].values
+		}	
 	layer_data.uns["spatial"]["images"] = {
 		res: np.asarray(Image.open(os.path.join(layer_dir, f"spatial/tissue_{res}_image.png"))) for res in ["hires", "lowres"]
 	}
-    layer_data.var_names_make_unique()
-
+	
 	return layer_data
 
 def read_visiumHD(hd_dir: str, bins: Any = "all") -> Dict[str, sc.AnnData]:
