@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inference of ligand-receptor interactions &mdash; STIM 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1f8ec04b"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Visualizations functions" href="Visualizations.html" />
+    <link rel="prev" title="Cell Neighborhoods Mapping and Functional Characterization" href="CN_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            STIM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Integration.html">Cross-Modality Integration of Single-Cell Resolution Xenium In Situ Data and Whole Transcriptome Visium Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CN_analysis.html">Cell Neighborhoods Mapping and Functional Characterization</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Inference of ligand-receptor interactions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Visualizations.html">Core visualization functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">STIM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Inference of ligand-receptor interactions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="inference-of-ligand-receptor-interactions">
+<h1>Inference of ligand-receptor interactions<a class="headerlink" href="#inference-of-ligand-receptor-interactions" title="Link to this heading"></a></h1>
+<p>Studying cell-cell interactions (CCI) is vital for understanding the complex communication networks that regulate cellular functions, tissue homeostasis, and disease mechanisms. CCI can be mediated through ligands binding to cognate receptors on receiver cells, which triggers downstream signaling events culminating in altered gene expression and cellular behavior. By integrating the spatial context with transcriptomic information, we can accurately map CCI in tissues.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.colors</span> <span class="k">as</span> <span class="nn">mcolors</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;WhRd&#39;</span><span class="p">,[</span><span class="s2">&quot;#e5e5e5&quot;</span><span class="p">,</span> <span class="s2">&quot;#fffacd&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;darkred&quot;</span><span class="p">],</span> <span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>  
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pySTIM</span> <span class="k">as</span> <span class="nn">pst</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">load_Xenium_iri_data</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Inferring ligand-receptor interactions involves calculating the expression levels of ligands and receptors in spatially proximate cells. Significant interactions are determined based on higher expression levels in spatially proximal cell pairs compared to distal pairs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">compute_cci</span><span class="p">(</span>
+        <span class="n">adata</span><span class="o">=</span><span class="n">adata_iri</span><span class="p">,</span>
+        <span class="n">group</span><span class="o">=</span><span class="s2">&quot;celltype&quot;</span><span class="p">,</span>
+        <span class="n">sender</span><span class="o">=</span><span class="s2">&quot;FR_PT&quot;</span><span class="p">,</span>
+        <span class="n">receiver</span><span class="o">=</span><span class="s2">&quot;Immune&quot;</span><span class="p">,</span>
+        <span class="n">contact_radius</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+        <span class="n">p_value_threshold</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">spatial_key</span><span class="o">=</span><span class="s1">&#39;spatial&#39;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CellChat ligand receptor database (Secreted Signaling only) dataset already exists at data/CellChatDB_lr_network_mouse.csv
+Number of expressed ligand genes:  187
+Number of expressed receptor genes:  175
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Processing LR Pairs: 100%|████████████████████| 507/507 [04:32&lt;00:00,  1.86it/s]
+</pre></div>
+</div>
+</div>
+</div>
+<p>The returned result consists of two parts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">result['cell_pair']</span></code>: Includes all interacting sender and receiver cell pair indices.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">result['lr_pair']</span></code>: Stores the significant ligand-receptor pairs.</p></li>
+</ul>
+<p>Visualize the spatially interacting sender-receiver pairs to understand the distribution and significance of these interactions.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmap_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;FR_PT&quot;</span><span class="p">:</span> <span class="s1">&#39;#2596be&#39;</span><span class="p">,</span>
+            <span class="s2">&quot;Immune&quot;</span><span class="p">:</span> <span class="s2">&quot;#e8847d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Rest&quot;</span><span class="p">:</span> <span class="s1">&#39;#eeeeee&#39;</span>
+        <span class="p">}</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">vis_cci</span><span class="p">(</span><span class="n">adata_iri</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">cmap_dict</span> <span class="o">=</span> <span class="n">cmap_dict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/775916d46e68378e452379c0ed908507f094d55626c9578f2639d00938f7ea7a.png" src="../../_images/775916d46e68378e452379c0ed908507f094d55626c9578f2639d00938f7ea7a.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lr_result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;lr_pair&#39;</span><span class="p">]</span>
+<span class="n">lr_result</span> <span class="o">=</span> <span class="n">lr_result</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;LR_Score&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">lr_result</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div style='overflow-x: auto;'><table border="1" class="dataframe table table-striped">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Sender</th>
+      <th>Receiver</th>
+      <th>Ligand</th>
+      <th>Receptor</th>
+      <th>LR_pair</th>
+      <th>LR_Score</th>
+      <th>mean_contact_lr_exp</th>
+      <th>exp_fraction</th>
+      <th>co_exp_count</th>
+      <th>fold_change</th>
+      <th>pval</th>
+      <th>pval_adjusted</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>91</th>
+      <td>FR_PT</td>
+      <td>Immune</td>
+      <td>Il34</td>
+      <td>Csf1r</td>
+      <td>Il34-Csf1r</td>
+      <td>2.281340</td>
+      <td>3.861294</td>
+      <td>0.796007</td>
+      <td>22873</td>
+      <td>1.232148</td>
+      <td>1.207781e-94</td>
+      <td>1.121019e-93</td>
+    </tr>
+    <tr>
+      <th>114</th>
+      <td>FR_PT</td>
+      <td>Immune</td>
+      <td>C3</td>
+      <td>Itgam</td>
+      <td>C3-Itgam</td>
+      <td>2.179696</td>
+      <td>3.530582</td>
+      <td>0.759469</td>
+      <td>21749</td>
+      <td>1.154431</td>
+      <td>2.862028e-29</td>
+      <td>1.117980e-28</td>
+    </tr>
+    <tr>
+      <th>113</th>
+      <td>FR_PT</td>
+      <td>Immune</td>
+      <td>C3</td>
+      <td>C3ar1</td>
+      <td>C3-C3ar1</td>
+      <td>2.096961</td>
+      <td>3.278072</td>
+      <td>0.753852</td>
+      <td>21566</td>
+      <td>1.093862</td>
+      <td>3.579785e-12</td>
+      <td>7.715054e-12</td>
+    </tr>
+    <tr>
+      <th>115</th>
+      <td>FR_PT</td>
+      <td>Immune</td>
+      <td>C3</td>
+      <td>Itgb2</td>
+      <td>C3-Itgb2</td>
+      <td>1.899584</td>
+      <td>2.731056</td>
+      <td>0.676769</td>
+      <td>18634</td>
+      <td>1.072767</td>
+      <td>1.211236e-06</td>
+      <td>1.781230e-06</td>
+    </tr>
+    <tr>
+      <th>82</th>
+      <td>FR_PT</td>
+      <td>Immune</td>
+      <td>Ccl2</td>
+      <td>Ccr2</td>
+      <td>Ccl2-Ccr2</td>
+      <td>1.648383</td>
+      <td>2.134820</td>
+      <td>0.714951</td>
+      <td>19981</td>
+      <td>1.707763</td>
+      <td>3.087883e-156</td>
+      <td>5.514077e-155</td>
+    </tr>
+  </tbody>
+</table></div></div></div>
+</div>
+<p>We can also visualize ligand-receptor interactions on spatial maps to see the expression of ligands in sender cell types and receptors in receiver cell types.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ligand</span> <span class="o">=</span> <span class="s2">&quot;Il34&quot;</span>
+<span class="n">receptor</span> <span class="o">=</span> <span class="s2">&quot;Csf1r&quot;</span>
+<span class="n">bg_color</span> <span class="o">=</span> <span class="s1">&#39;#ffffff&#39;</span>
+<span class="n">group</span> <span class="o">=</span> <span class="s1">&#39;celltype&#39;</span>
+<span class="n">sender</span> <span class="o">=</span> <span class="s2">&quot;FR_PT&quot;</span>
+<span class="n">receiver</span> <span class="o">=</span> <span class="s2">&quot;Immune&quot;</span>
+<span class="n">ptsize</span> <span class="o">=</span> <span class="mf">0.8</span>
+<span class="n">cmap1</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;Blues&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;#eeeeee&quot;</span><span class="p">,</span><span class="s2">&quot;#81b5da&quot;</span><span class="p">,</span><span class="s2">&quot;#2f6797&quot;</span><span class="p">],</span> <span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="n">cmap2</span> <span class="o">=</span> <span class="n">mcolors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;Reds&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;#eeeeee&quot;</span><span class="p">,</span><span class="s2">&quot;#fa8a72&quot;</span><span class="p">,</span><span class="s2">&quot;#ae0440&quot;</span><span class="p">],</span> <span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">vis_lr_cci_new</span><span class="p">(</span><span class="n">adata_iri</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">bg_color</span><span class="p">,</span> 
+               <span class="n">cmap1</span><span class="p">,</span> <span class="n">cmap2</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of sender cells: 10134
+Number of receiver cells: 7806
+</pre></div>
+</div>
+<img alt="../../_images/e66d9aa10e567937c87c0bd657d2a07e7e4dc6aad8a60501eb54e11c6fad563f.png" src="../../_images/e66d9aa10e567937c87c0bd657d2a07e7e4dc6aad8a60501eb54e11c6fad563f.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1200</span><span class="p">,</span><span class="mi">1400</span><span class="p">]</span>
+<span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">850</span><span class="p">,</span><span class="mi">1050</span><span class="p">]</span>
+<span class="n">ligand</span> <span class="o">=</span> <span class="s2">&quot;Il34&quot;</span>
+<span class="n">receptor</span> <span class="o">=</span> <span class="s2">&quot;Csf1r&quot;</span>
+<span class="n">bg_color</span> <span class="o">=</span> <span class="s1">&#39;#ffffff&#39;</span>
+<span class="n">group</span> <span class="o">=</span> <span class="s1">&#39;celltype&#39;</span>
+<span class="n">sender</span> <span class="o">=</span> <span class="s2">&quot;FR_PT&quot;</span>
+<span class="n">receiver</span> <span class="o">=</span> <span class="s2">&quot;Immune&quot;</span>
+<span class="n">ptsize</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="n">pst</span><span class="o">.</span><span class="n">vis_lr_cci_new</span><span class="p">(</span><span class="n">adata_iri</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">bg_color</span><span class="p">,</span> 
+               <span class="n">cmap1</span><span class="p">,</span> <span class="n">cmap2</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span> <span class="o">=</span> <span class="n">ylims</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of sender cells: 124
+Number of receiver cells: 52
+</pre></div>
+</div>
+<img alt="../../_images/351fea6f47df7af478d879318af89b8ffd4f1d66b24dbced4a1e7dba301c752d.png" src="../../_images/351fea6f47df7af478d879318af89b8ffd4f1d66b24dbced4a1e7dba301c752d.png" />
+</div>
+</div>
+<p>Visualize LR expression on cell polygons.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">poly_data_loaded</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">Xenium_iri_poly</span><span class="o">.</span><span class="n">load_json</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;poly&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">poly_data_loaded</span>
+<span class="n">adata_iri</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;poly&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">adata_iri</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;poly&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">adata_iri</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">adata_iri</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;poly&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1200</span><span class="p">,</span><span class="mi">1400</span><span class="p">]</span>
+<span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">850</span><span class="p">,</span><span class="mi">1050</span><span class="p">]</span>
+<span class="n">ligand</span> <span class="o">=</span> <span class="s2">&quot;Il34&quot;</span>
+<span class="n">receptor</span> <span class="o">=</span> <span class="s2">&quot;Csf1r&quot;</span>
+<span class="n">bg_color</span> <span class="o">=</span> <span class="s1">&#39;#ffffff&#39;</span>
+<span class="n">group</span> <span class="o">=</span> <span class="s1">&#39;celltype&#39;</span>
+<span class="n">sender</span> <span class="o">=</span> <span class="s2">&quot;FR_PT&quot;</span>
+<span class="n">receiver</span> <span class="o">=</span> <span class="s2">&quot;Immune&quot;</span>
+
+<span class="n">pst</span><span class="o">.</span><span class="n">vis_lr_cci_new</span><span class="p">(</span><span class="n">adata_iri</span><span class="p">,</span> <span class="n">group</span><span class="p">,</span> <span class="n">ligand</span><span class="p">,</span> <span class="n">receptor</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">receiver</span><span class="p">,</span> <span class="n">bg_color</span><span class="p">,</span> 
+               <span class="n">cmap1</span><span class="p">,</span> <span class="n">cmap2</span><span class="p">,</span> <span class="n">ptsize</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="n">xlims</span><span class="p">,</span> <span class="n">ylims</span> <span class="o">=</span> <span class="n">ylims</span><span class="p">,</span> <span class="n">poly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Number of sender cells: 124
+Number of receiver cells: 52
+</pre></div>
+</div>
+<img alt="../../_images/bb578e5bb2ae14d17392f2a656891b7355e665f0677c60b89da70bc6116705b5.png" src="../../_images/bb578e5bb2ae14d17392f2a656891b7355e665f0677c60b89da70bc6116705b5.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata_iri</span><span class="o">.</span><span class="n">write_h5ad</span><span class="p">(</span><span class="s2">&quot;Xenium-IRI-Day14R.h5ad&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="CN_analysis.html" class="btn btn-neutral float-left" title="Cell Neighborhoods Mapping and Functional Characterization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Visualizations.html" class="btn btn-neutral float-right" title="Visualizations functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Humphreys Lab.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

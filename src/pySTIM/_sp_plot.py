@@ -552,6 +552,310 @@ def plot_scatter_img(
         plt.show()
 
 
+def plot_visiumHD(
+    adata: sc.AnnData,
+    genes: List[str] = [],
+    color_by: Optional[str] = None,
+    cmap: Optional[matplotlib.colors.Colormap] = None,
+    bin_size: int = 16,
+    ticks: bool = False,
+    legend_loc: str = "center left",
+    bbox_to_anchor: Tuple[float, float] = (1.0, 0.5),
+    scale_bar: bool = False,
+    scale: int = 200,
+    legend_col: int = 2,
+    image: bool = True,
+    library_id: str = "",
+    crop: bool = False,
+    xlims: Optional[Tuple[float, float]] = None,
+    ylims: Optional[Tuple[float, float]] = None,
+    dpi: int = 300,
+    figsize: tuple = (5, 5),
+    seed: int = 42,
+    cutoff: int = 1,
+    save: Optional[str] = None,
+):
+    """
+    Plots spatial data from VisiumHD technology.
+
+    Parameters
+    ----------
+    adata : sc.AnnData
+            The annotated data matrix to plot.
+    genes : List[str], optional
+            List of genes to visualize.
+    color_by : Optional[str], optional
+            Column name to color cells by.
+    cmap : Optional[matplotlib.colors.Colormap], optional
+            Colormap for cell coloring.
+    bin_size : int, optional
+            Bin size for scaling spatial coordinates.
+    ticks : bool, optional
+            If True, display axis ticks.
+    legend_loc : str, optional
+            Location of the legend.
+    bbox_to_anchor : Tuple[float, float], optional
+            Bounding box to anchor the legend.
+    scale_bar : bool, optional
+            If True, add scalebar.
+    legend_col : int, optional
+            Number of columns in the legend.
+    image : bool, optional
+            If True, display underlying tissue image.
+    library_id : str, optional
+            Identifier for the library to plot.
+    crop : bool, optional
+            If True, crop the image to specified limits.
+    xlims : Optional[Tuple[float, float]], optional
+            X-axis limits for cropping.
+    ylims : Optional[Tuple[float, float]], optional
+            Y-axis limits for cropping.
+    dpi : int, optional
+            Dots per inch for the figure.
+    figsize : tuple, optional
+            Size of the figure.
+    seed : int, optional
+            Seed for random processes.
+    cutoff : int, optional
+            Minimum expression level to display.
+    save : Optional[str], optional
+            Path to save the plot image.
+
+    Returns
+    -------
+    None
+    """
+
+    ### Helper functions
+    def to_hex(rgb_tuple):
+        return "#{:02x}{:02x}{:02x}".format(
+            int(rgb_tuple[0] * 255), int(rgb_tuple[1] * 255), int(rgb_tuple[2] * 255)
+        )
+
+    def add_scalebar(ax, scale):
+        scalebar = AnchoredSizeBar(
+            ax.transData,
+            scale,
+            " ",
+            "lower left",
+            pad=0.5,
+            sep=5,
+            color="black",
+            frameon=False,
+            size_vertical=2,
+            fontproperties=fm.FontProperties(size=12),
+        )
+        ax.add_artist(scalebar)
+
+    def plot(ax, new_spatial, new_coord, px_width, colors, ticks, image, scale):
+        for i in range(new_coord.shape[0]):
+            new_x, new_y = new_coord[i, 0], new_coord[i, 1]
+            rect = Rectangle(
+                (new_x, new_y),
+                px_width,
+                px_width,
+                edgecolor="none",
+                facecolor=colors[i],
+            )
+            ax.add_patch(rect)
+
+        ax.axis("scaled")
+        ax.grid(False)
+        ax.invert_yaxis()
+        ax.imshow(adata.uns["spatial"]["images"]["hires"])
+        ax.set_xlim(new_spatial[:, 0].min(), new_spatial[:, 0].max())
+        ax.set_ylim(new_spatial[:, 1].max(), new_spatial[:, 1].min())
+
+        if scale_bar:
+            add_scalebar(ax, scale)
+
+    scale_factor = adata.uns["spatial"]["scalefactors"]["tissue_hires_scalef"]
+    spatial_coords = adata.obsm["spatial"] * scale_factor
+    json_data = adata.uns["spatial"]["scalefactors"]
+    px_width = (
+        bin_size / json_data["microns_per_pixel"] * json_data["tissue_hires_scalef"]
+    )
+    scale = scale / json_data["microns_per_pixel"] * json_data["tissue_hires_scalef"]
+    fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
+
+    if not ticks:
+        plt.tick_params(
+            left=False, right=False, labelleft=False, labelbottom=False, bottom=False
+        )
+        ax.axis("off")
+
+    if image:
+        if crop:
+            subset_idx = np.where(
+                (spatial_coords[:, 1] > xlims[0])
+                & (spatial_coords[:, 1] < xlims[1])
+                & (spatial_coords[:, 0] > ylims[0])
+                & (spatial_coords[:, 0] < ylims[1])
+            )[0]
+        else:
+            subset_idx = np.arange(spatial_coords.shape[0])
+
+        new_spatial = spatial_coords[subset_idx]
+
+        if not genes:
+            map_dict = get_color_map(
+                adata,
+                seed=seed,
+                color_by=color_by,
+                cmap=cmap,
+                genes=genes,
+                subset_idx=subset_idx,
+            )
+
+            all_colors = adata.obs[color_by].map(map_dict).to_numpy()
+            colors = all_colors[subset_idx]
+            plot(ax, new_spatial, new_spatial, px_width, colors, ticks, image, scale)
+            markers = [
+                plt.Line2D([0, 0], [0, 0], color=color, marker="s", linestyle="")
+                for color in map_dict.values()
+            ]
+            fig.legend(
+                markers,
+                map_dict.keys(),
+                numpoints=1,
+                loc=legend_loc,
+                bbox_to_anchor=bbox_to_anchor,
+                frameon=False,
+                ncol=legend_col,
+            )
+
+        else:
+            if isinstance(genes, str):
+                genes = [genes]
+
+            counts = sc.get.obs_df(adata, keys=genes[0]).to_numpy().flatten()
+            filtered_idx = np.where(counts >= cutoff)[0]
+            filtered_subset_idx = np.intersect1d(subset_idx, filtered_idx)
+            new_coord = (
+                adata[
+                    filtered_subset_idx,
+                ]
+                .obsm["spatial"]
+                .copy()
+                * scale_factor
+            )
+            cmap = get_color_map(
+                adata,
+                seed=seed,
+                color_by=color_by,
+                cmap=cmap,
+                genes=genes,
+                subset_idx=subset_idx,
+            )
+            norm = matplotlib.colors.Normalize(
+                vmin=min(counts), vmax=np.quantile(counts, 0.99)
+            )
+            mapper = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
+
+            rgba_colors = mapper.to_rgba(counts)
+            all_colors = (rgba_colors[:, :3] * 255).astype(int)
+            hex_colors = np.apply_along_axis(
+                lambda x: "#{:02x}{:02x}{:02x}".format(*x), 1, all_colors
+            )
+            colors = hex_colors[filtered_subset_idx]
+
+            plot(ax, new_spatial, new_coord, px_width, colors, ticks, image, scale)
+            cbar_ax = fig.add_axes([0.95, 0.25, 0.015, 0.5])
+            fig.colorbar(mapper, cax=cbar_ax)
+
+    else:
+        pxl_rows = adata.obs["array_row"].values
+        pxl_cols = adata.obs["array_col"].values
+        max_row = int(np.max(pxl_rows)) + 1
+        max_col = int(np.max(pxl_cols)) + 1
+        expression_grid = np.full((max_row, max_col), np.nan)
+        if genes:
+            if isinstance(genes, str):
+                genes = [genes]
+            data = sc.get.obs_df(adata, keys=genes[0]).to_numpy().flatten()
+        else:
+            data = adata.obs[color_by].to_numpy().flatten()
+
+        for i in range(len(pxl_rows)):
+            row = int(pxl_rows[i])
+            col = int(pxl_cols[i])
+            expression_grid[row : row + 1, col : col + 1] = data[i]
+
+        if genes:
+            norm = mcolors.Normalize(
+                vmin=np.nanmin(data), vmax=np.nanquantile(data, 0.99)
+            )
+            cmap = get_color_map(
+                adata, seed=seed, color_by=color_by, cmap=cmap, genes=genes
+            )
+            heatmap = ax.imshow(
+                expression_grid,
+                aspect="auto",
+                origin="lower",
+                cmap=cmap,
+                norm=norm,
+                interpolation="none",
+            )
+            cbar_ax = fig.add_axes([0.95, 0.25, 0.015, 0.5])
+            fig.colorbar(heatmap, cax=cbar_ax)
+
+        else:
+            unique_categories = np.unique(data)
+            num_categories = len(unique_categories)
+
+            colors = (
+                sns.color_palette("tab20b", num_categories)
+                if num_categories <= 20
+                else sns.color_palette("tab20b", 20)
+                + sns.color_palette("tab20c", num_categories - 20)
+            )
+            cmap = matplotlib.colors.ListedColormap(colors)
+            bounds = np.arange(num_categories + 1) - 0.5
+            norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+
+            heatmap = ax.imshow(
+                expression_grid,
+                aspect="auto",
+                origin="lower",
+                cmap=cmap,
+                norm=norm,
+                interpolation="none",
+            )
+
+            handles = [
+                plt.Line2D(
+                    [0],
+                    [0],
+                    marker="s",
+                    color="w",
+                    label=unique_categories[i],
+                    markersize=10,
+                    markerfacecolor=colors[i],
+                )
+                for i in range(num_categories)
+            ]
+            ax.legend(
+                handles=handles,
+                loc=legend_loc,
+                bbox_to_anchor=bbox_to_anchor,
+                frameon=False,
+                ncol=legend_col,
+            )
+
+        ax.axis("scaled")
+        ax.grid(False)
+
+        # Crop the axes if required
+        if crop:
+            print(xlims, ylims)
+            ax.set_xlim(xlims[0], xlims[1])
+            ax.set_ylim(ylims[0], ylims[1])
+
+    if save:
+        plt.savefig(save)
+
+    plt.show()
+    
 def plot_integrate(adata_vis, 
                    adata_xe,
                     gene = "Nphs2", 
@@ -601,190 +905,7 @@ def plot_integrate(adata_vis,
     plt.tight_layout()
     plt.show()
 
-def plot_visiumHD(adata: sc.AnnData,
-					genes: List[str] = [],
-					color_by: Optional[str] = None,
-					cmap: Optional[matplotlib.colors.Colormap] = None,
-					bin_size: int = 16,
-					ticks: bool = False,
-					legend_loc: str = "center left",
-					bbox_to_anchor: Tuple[float, float] = (1.0, 0.5),
-					scale_bar: bool = False,
-					scale: int = 200,
-					legend_col: int = 2,
-					image: bool = True,
-					library_id: str = "",
-					crop: bool = False,
-					xlims: Optional[Tuple[float, float]] = None,
-					ylims: Optional[Tuple[float, float]] = None,
-					dpi: int = 300,
-					figsize: tuple = (5, 5),
-					seed: int = 42,
-					cutoff: int = 1,
-					save: Optional[str] = None):
-		"""
-		Plots spatial data from VisiumHD technology.
-		
-		Parameters:
-		- adata (sc.AnnData): The annotated data matrix to plot.
-		- genes (List[str]): List of genes to visualize.
-		- color_by (Optional[str]): Column name to color cells by.
-		- cmap (Optional[matplotlib.colors.Colormap]): Colormap for cell coloring.
-		- bin_size (int): Bin size for scaling spatial coordinates.
-		- ticks (bool): If True, display axis ticks.
-		- legend_loc (str): Location of the legend.
-		- bbox_to_anchor (Tuple[float, float]): Bounding box to anchor the legend.
-        - scale_bar (bool): If True, add scalebar. 
-		- legend_col (int): Number of columns in the legend.
-		- image (bool): If True, display underlying tissue image.
-		- library_id (str): Identifier for the library to plot.
-		- crop (bool): If True, crop the image to specified limits.
-		- xlims (Optional[Tuple[float, float]]): X-axis limits for cropping.
-		- ylims (Optional[Tuple[float, float]]): Y-axis limits for cropping.
-		- seed (int): Seed for random processes.
-		- cutoff (int): Minimum expression level to display.
-		- save (Optional[str]): Path to save the plot image.
-		
-		Returns:
-		None. 
-		"""
-			
-		### helper functions
-		def to_hex(rgb_tuple):
-			return '#{:02x}{:02x}{:02x}'.format(int(rgb_tuple[0] * 255), int(rgb_tuple[1] * 255), int(rgb_tuple[2] * 255))
-		
-		def add_scalebar(ax, scale):
-			scalebar = AnchoredSizeBar(ax.transData,
-										scale, ' ', 'lower left', 
-										pad=0.5,
-										sep=5,
-										color='black',
-										frameon=False,
-										size_vertical=2,
-										fontproperties=fm.FontProperties(size=12))
-			ax.add_artist(scalebar)
-			
-		def plot(ax, new_spatial, new_coord, px_width, colors, ticks, image, scale):
-				
-			for i in range(new_coord.shape[0]):
-				new_x, new_y = new_coord[i,0], new_coord[i,1]
-				rect = Rectangle((new_x, new_y), px_width, px_width, edgecolor='none', facecolor=colors[i])
-				ax.add_patch(rect)
-				
-			ax.axis('scaled')
-			ax.grid(False)
-			ax.invert_yaxis()
-			ax.imshow(adata.uns["spatial"]["images"]['hires'])
-			ax.set_xlim(new_spatial[:, 0].min(), new_spatial[:, 0].max())
-			ax.set_ylim(new_spatial[:, 1].max(), new_spatial[:, 1].min())
-				
-			if scale_bar:
-				add_scalebar(ax, scale)
-			
-		scale_factor = adata.uns["spatial"]["scalefactors"]['tissue_hires_scalef']
-		spatial_coords = adata.obsm["spatial"] * scale_factor
-		json_data = adata.uns['spatial']['scalefactors']
-		px_width = bin_size / json_data['microns_per_pixel'] * json_data['tissue_hires_scalef']
-		scale = scale / json_data['microns_per_pixel'] * json_data['tissue_hires_scalef']	
-		fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
-		
-		if not ticks:
-			plt.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
-			ax.axis("off")
-		
-		if image:
-			if crop:
-				subset_idx = np.where((spatial_coords[:, 1] > xlims[0]) & (spatial_coords[:, 1] < xlims[1]) & 
-									  (spatial_coords[:, 0] > ylims[0]) & (spatial_coords[:, 0] < ylims[1]))[0]			
-			else:
-				subset_idx = np.arange(spatial_coords.shape[0])
-				
-			new_spatial = spatial_coords[subset_idx]
-		
-			if not genes:
-				map_dict = get_color_map(adata, seed=seed, color_by=color_by, cmap=cmap,  genes=genes, subset_idx=subset_idx)
-			
-				all_colors = adata.obs[color_by].map(map_dict).to_numpy()
-				colors = all_colors[subset_idx]
-				plot(ax, new_spatial, new_spatial, px_width, colors, ticks, image, scale)
-				markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='s', linestyle='') for color in map_dict.values()]
-				fig.legend(markers, map_dict.keys(), numpoints=1, loc=legend_loc, bbox_to_anchor=bbox_to_anchor, frameon=False,
-							ncol=legend_col)
-		
-			else:
-				if isinstance(genes, str):
-					genes = [genes]
-					
-				counts = sc.get.obs_df(adata, keys=genes[0]).to_numpy().flatten()
-				filtered_idx = np.where(counts >= cutoff)[0]
-				filtered_subset_idx = np.intersect1d(subset_idx, filtered_idx)
-				new_coord = adata[filtered_subset_idx,].obsm["spatial"].copy() * scale_factor
-				cmap = get_color_map(adata, seed=seed, color_by=color_by, cmap=cmap,  genes=genes, subset_idx=subset_idx)
-				norm = matplotlib.colors.Normalize(vmin=min(counts), vmax=np.quantile(counts, 0.99))
-				mapper = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
-				
-				rgba_colors = mapper.to_rgba(counts)
-				all_colors = (rgba_colors[:, :3] * 255).astype(int)
-				hex_colors = np.apply_along_axis(lambda x: '#{:02x}{:02x}{:02x}'.format(*x), 1, all_colors)
-				colors = hex_colors[filtered_subset_idx]
-				
-				plot(ax, new_spatial, new_coord, px_width, colors, ticks, image, scale)
-				cbar_ax = fig.add_axes([0.95, 0.25, 0.015, 0.5])
-				fig.colorbar(mapper, cax=cbar_ax)
 
-		else:
-			pxl_rows = adata.obs['array_row'].values
-			pxl_cols = adata.obs['array_col'].values
-			max_row = int(np.max(pxl_rows)) + 1
-			max_col = int(np.max(pxl_cols)) + 1
-			expression_grid = np.full((max_row, max_col), np.nan)
-			if genes:
-				if isinstance(genes, str):
-					genes = [genes]
-				data = sc.get.obs_df(adata, keys=genes[0]).to_numpy().flatten()	
-			else:
-				data = adata.obs[color_by].to_numpy().flatten()
-				
-			for i in range(len(pxl_rows)):
-				row = int(pxl_rows[i])
-				col = int(pxl_cols[i])
-				expression_grid[row:row+1, col:col+1] = data[i]
-			
-			if genes:
-				norm = mcolors.Normalize(vmin=np.nanmin(data), vmax=np.nanquantile(data, 0.99))
-				cmap = get_color_map(adata, seed=seed, color_by=color_by, cmap=cmap,  genes=genes)
-				heatmap = ax.imshow(expression_grid, aspect='auto', origin='lower', cmap=cmap, norm=norm, interpolation='none')
-				cbar_ax = fig.add_axes([0.95, 0.25, 0.015, 0.5])
-				fig.colorbar(heatmap, cax=cbar_ax)
-				
-			else:
-				unique_categories = np.unique(data)
-				num_categories = len(unique_categories)
-
-				colors = sns.color_palette("tab20b", num_categories) if num_categories <= 20 else sns.color_palette("tab20b", 20) + sns.color_palette("tab20c", num_categories - 20)
-				cmap = matplotlib.colors.ListedColormap(colors)
-				bounds = np.arange(num_categories + 1) - 0.5
-				norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-				
-				heatmap = ax.imshow(expression_grid, aspect='auto', origin='lower', cmap=cmap, norm=norm, interpolation='none')
-				
-				handles = [plt.Line2D([0], [0], marker='s', color='w', label=unique_categories[i],
-															markersize=10, markerfacecolor=colors[i]) for i in range(num_categories)]
-				ax.legend(handles=handles, loc=legend_loc, bbox_to_anchor=bbox_to_anchor, frameon=False, ncol=legend_col)
-				
-			ax.axis('scaled')
-			ax.grid(False)
-			
-			# Crop the axes if required
-			if crop:
-				print(xlims, ylims)
-				ax.set_xlim(xlims[0], xlims[1])
-				ax.set_ylim(ylims[0], ylims[1])
-	
-		if save:
-			plt.savefig(save)
-		
-		plt.show()
 
 def plot_compare(adata_xe, Xenium_agg_gene_df, adata_vis, gene, cmap, save = None):
 
@@ -1078,3 +1199,4 @@ def plot_network(
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     plt.show()
+    

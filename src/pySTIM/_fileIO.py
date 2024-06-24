@@ -13,6 +13,19 @@ from typing import Any, Dict
 import logging
 
 def read_xenium(xenium_path: str) -> sc.AnnData:
+    """
+    Reads and processes Xenium data from the specified path.
+
+    Parameters
+    ----------
+    xenium_path : str
+        Path to the directory containing Xenium data.
+
+    Returns
+    -------
+    sc.AnnData
+        Annotated data matrix containing the processed Xenium data.
+    """
 
     def read_data(file_name, file_type='csv'):
         file_path = os.path.join(xenium_path, file_name)
@@ -163,32 +176,40 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	return layer_data
 
 def read_visiumHD(hd_dir: str, bins: Any = "all") -> Dict[str, sc.AnnData]:
-	"""
-	Loads and processes Visium HD data for specified bin sizes.
-	
-	Parameters:
-	- hd_dir (str): Directory containing VisiumHD data.
-	- bins (Any): Specific bin sizes to load, can be 'all', a single integer, or a list of integers.
-	
-	Returns:
-	- Dict[str, sc.AnnData]: A dictionary of annotated data objects indexed by bin size.
-	"""
-	if isinstance(bins, str) and bins.lower() == "all":
-		bin_sizes = [2, 8, 16]
-	elif isinstance(bins, int):
-		bin_sizes = [bins]
-	elif isinstance(bins, list) and all(isinstance(bin_size, int) for bin_size in bins):
-		bin_sizes = bins
-	else:
-		raise ValueError("Invalid 'bins' parameter. It must be 'all', a single integer, or a list of integers.")
-		
-	adata_dict = {}
-	
-	for bin_size in bin_sizes:
-		logging.info(f"Loading {bin_size}um binned data...")
-		adata_dict[f"bin_{bin_size}um"] = read_layers(hd_dir, bin_size=bin_size)
-		
-	return adata_dict
+    """
+    Loads and processes Visium HD data for specified bin sizes.
+
+    Parameters
+    ----------
+    hd_dir : str
+            Directory containing VisiumHD data.
+    bins : Any
+            Specific bin sizes to load, can be 'all', a single integer, or a list of integers.
+
+    Returns
+    -------
+    Dict[str, sc.AnnData]
+            A dictionary of annotated data objects indexed by bin size.
+    """
+    if isinstance(bins, str) and bins.lower() == "all":
+        bin_sizes = [2, 8, 16]
+    elif isinstance(bins, int):
+        bin_sizes = [bins]
+    elif isinstance(bins, list) and all(isinstance(bin_size, int) for bin_size in bins):
+        bin_sizes = bins
+    else:
+        raise ValueError(
+            "Invalid 'bins' parameter. It must be 'all', a single integer, or a list of integers."
+        )
+
+    adata_dict = {}
+
+    for bin_size in bin_sizes:
+        logging.info(f"Loading {bin_size}um binned data...")
+        adata_dict[f"bin_{bin_size}um"] = read_layers(hd_dir, bin_size=bin_size)
+
+    return adata_dict
+
 
 def load_xenium_baysor(data_dir: str) -> sc.AnnData:
     """

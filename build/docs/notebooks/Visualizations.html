@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visualizations functions &mdash; STIM 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=1f8ec04b"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API" href="../../api.html" />
+    <link rel="prev" title="Inference of ligand-receptor interactions" href="LR_analysis.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            STIM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Integration.html">Cross-Modality Integration of Single-Cell Resolution Xenium In Situ Data and Whole Transcriptome Visium Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CN_analysis.html">Cell Neighborhoods Mapping and Functional Characterization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="LR_analysis.html">Inference of ligand-receptor interactions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Core visualization functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-xenium-data">Visualizing Xenium data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-visiumhd-data">Visualizing VisiumHD data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">STIM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../tutorials.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Visualizations functions</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="visualizations-functions">
+<h1>Visualizations functions<a class="headerlink" href="#visualizations-functions" title="Link to this heading"></a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">pySTIM</span> <span class="k">as</span> <span class="nn">pst</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The example dataset used in this tutorial is from a human colorectal cancer sample (Sample P5 CRC) which can be downloaded from the <a class="reference external" href="https://www.10xgenomics.com/products/visium-hd-spatial-gene-expression/dataset-human-crc">10X Genomics</a></p>
+<section id="visualizing-xenium-data">
+<h2>Visualizing Xenium data<a class="headerlink" href="#visualizing-xenium-data" title="Link to this heading"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xenium_path</span> <span class="o">=</span> <span class="s2">&quot;Xenium_V1_Human_Colon_Cancer_P5_CRC_Add_on_FFPE_outs/&quot;</span>
+<span class="n">adata</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">read_xenium</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Starting to read and process Xenium data.
+Reading cell feature matrix...
+Reading cells.parquet...
+Reading transcripts.parquet...
+Reading cell_boundaries.parquet...
+Reading UMAP data...
+Filtering cells based on UMAP results...
+Updating molecular data...
+Data loading completed.
+</pre></div>
+</div>
+</div>
+</div>
+<p>We can start by visualizing the data as a spatial scatter plot to provide an overview of the spatial distribution of cells within the sample.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/c585f52aa0ef3bb28a7742c75ff3e1267bbfe6993250aabe0150fd92ede1df0b.png" src="../../_images/c585f52aa0ef3bb28a7742c75ff3e1267bbfe6993250aabe0150fd92ede1df0b.png" />
+</div>
+</div>
+<p>We can highlight specific cell types or clusters within the data</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">highlight_cell</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/636afc37b03e61c4e9616c05f9eecf2d8a5920039b16d5c13d9c46acd63065d7.png" src="../../_images/636afc37b03e61c4e9616c05f9eecf2d8a5920039b16d5c13d9c46acd63065d7.png" />
+</div>
+</div>
+<p>Focusing on a specific region of the dataset by setting the <code class="docutils literal notranslate"><span class="pre">xlims</span></code> and <code class="docutils literal notranslate"><span class="pre">ylims</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3500</span><span class="p">],</span> <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4500</span><span class="p">,</span><span class="mi">5000</span><span class="p">],</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e00d320c31da8bb9c7db2d854b4a1d0606d6bf2a64a57ea14c71b89f3b46c9be.png" src="../../_images/e00d320c31da8bb9c7db2d854b4a1d0606d6bf2a64a57ea14c71b89f3b46c9be.png" />
+</div>
+</div>
+<p>Creating cell polygons in order to visualize the data as spatial cell polygons.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">create_polygons</span><span class="p">(</span><span class="n">adata</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|████████████████████████████████████████████████████████| 275874/275874 [01:24&lt;00:00, 3272.48it/s]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_polygon</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;cell&quot;</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3500</span><span class="p">],</span> <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4500</span><span class="p">,</span><span class="mi">5000</span><span class="p">],</span> <span class="n">dpi</span> <span class="o">=</span> <span class="mi">120</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of polygons:  2010
+</pre></div>
+</div>
+<img alt="../../_images/12cf8ea34865a978ceff32e906dbbd1cb34a633a650ff9e40aa6e7a904977eb2.png" src="../../_images/12cf8ea34865a978ceff32e906dbbd1cb34a633a650ff9e40aa6e7a904977eb2.png" />
+</div>
+</div>
+<p>we can also visualize the expression of specific genes and the distribution of transcripts on cell polygons.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_polygon</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;gene&quot;</span><span class="p">,</span> <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SCNN1A&#39;</span><span class="p">,</span><span class="s1">&#39;CA1&#39;</span><span class="p">,</span><span class="s1">&#39;CA4&#39;</span><span class="p">],</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+             <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3500</span><span class="p">],</span> <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4500</span><span class="p">,</span><span class="mi">5000</span><span class="p">],</span> <span class="n">dpi</span> <span class="o">=</span> <span class="mi">120</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of polygons:  2010
+</pre></div>
+</div>
+<img alt="../../_images/4edd186b77f3e4e19be4eca3037f6640cf5d614c2ee4b1315cf12b2e1ea73299.png" src="../../_images/4edd186b77f3e4e19be4eca3037f6640cf5d614c2ee4b1315cf12b2e1ea73299.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#961E1E&#39;</span><span class="p">,</span><span class="s1">&#39;#B0CF98&#39;</span><span class="p">,</span><span class="s2">&quot;#c7e6f9&quot;</span><span class="p">]</span>
+<span class="n">features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;SCNN1A&#39;</span><span class="p">,</span><span class="s1">&#39;CA1&#39;</span><span class="p">,</span><span class="s1">&#39;CA4&#39;</span><span class="p">]</span>
+<span class="n">map_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">colors</span><span class="p">))</span>
+
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_polygon</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">plot_type</span><span class="o">=</span><span class="s2">&quot;transcript&quot;</span><span class="p">,</span> <span class="n">genes</span><span class="o">=</span><span class="n">features</span><span class="p">,</span> 
+                    <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3500</span><span class="p">],</span> <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4500</span><span class="p">,</span><span class="mi">5000</span><span class="p">],</span>
+                    <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;#bfbfbf&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">map_dict</span><span class="p">,</span> <span class="n">ptsize</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">legend_col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Total number of polygons:  2010
+</pre></div>
+</div>
+<img alt="../../_images/5d83993e0d79eff52befcb426d1a30834dd143d898714f1de97772a13f91678a.png" src="../../_images/5d83993e0d79eff52befcb426d1a30834dd143d898714f1de97772a13f91678a.png" />
+</div>
+</div>
+</section>
+<section id="visualizing-visiumhd-data">
+<h2>Visualizing VisiumHD data<a class="headerlink" href="#visualizing-visiumhd-data" title="Link to this heading"></a></h2>
+<p>VisiumHD provides gene expression data at different bin levels: 2 µm, 8 µm, and 16 µm. We will load data from all bin levels and store the AnnData objects in a dictionary. Note that the analysis directory is provided only at 8 µm and 16 µm bin sizes.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">hd_dir</span> <span class="o">=</span> <span class="s2">&quot;Visium_HD_Human_Colon_Cancer_P5&quot;</span>
+<span class="n">layer_dict</span> <span class="o">=</span> <span class="n">pst</span><span class="o">.</span><span class="n">read_visiumHD</span><span class="p">(</span><span class="n">hd_dir</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>No analysis directory for bin size 2.
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">layer_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;bin_2um&#39;, &#39;bin_8um&#39;, &#39;bin_16um&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_8um&#39;</span><span class="p">],</span> 
+                <span class="n">color_by</span> <span class="o">=</span> <span class="s2">&quot;cluster&quot;</span><span class="p">,</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                <span class="n">legend_col</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/017c5f984dc83157ee7a529c5707885cd2ed95ede734ecf6fa3c656c54b8abf9.png" src="../../_images/017c5f984dc83157ee7a529c5707885cd2ed95ede734ecf6fa3c656c54b8abf9.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmap</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s1">&#39;GrRd&#39;</span><span class="p">,[</span><span class="s1">&#39;#E6E6E6&#39;</span><span class="p">,</span> <span class="s1">&#39;#faf5dc&#39;</span><span class="p">,</span><span class="s1">&#39;#fff8d4&#39;</span><span class="p">,</span> <span class="s1">&#39;#fc0303&#39;</span><span class="p">,</span><span class="s1">&#39;darkred&#39;</span><span class="p">],</span> <span class="n">N</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span> 
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span>
+                <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="p">,</span> 
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">figsize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span>
+                <span class="n">legend_col</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/caa2b2aa94688699e2d8fd4550e86b77ce4446a60305e2b4c222f5630acb63a9.png" src="../../_images/caa2b2aa94688699e2d8fd4550e86b77ce4446a60305e2b4c222f5630acb63a9.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">ad</span> <span class="ow">in</span> <span class="n">layer_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">ad</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
+    <span class="n">ad</span><span class="o">.</span><span class="n">raw</span> <span class="o">=</span> <span class="n">ad</span>
+    <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">normalize_total</span><span class="p">(</span><span class="n">ad</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For visualization, we can also overlay molecular data on histology images. This process might take longer as each cell is represented as polygon data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span> 
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> 
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">bbox_to_anchor</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span>
+                <span class="n">legend_col</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">cutoff</span> <span class="o">=</span> <span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e737c0c0b48d90ae64be20b5a545a8e2b7eb51d2ed138e45ac3b369035133c91.png" src="../../_images/e737c0c0b48d90ae64be20b5a545a8e2b7eb51d2ed138e45ac3b369035133c91.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 32.6 s, sys: 609 ms, total: 33.2 s
+Wall time: 32.9 s
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s compare these resolutions in terms of spatial gene expression distribution.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span> 
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/e797de0db3fc1c2eb5aea2391fbb1365715cc2f6b9d35bbfb44cf535e264ae28.png" src="../../_images/e797de0db3fc1c2eb5aea2391fbb1365715cc2f6b9d35bbfb44cf535e264ae28.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_8um&#39;</span><span class="p">],</span> 
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/fa7923898e356e3c6cf39a0f9057902fb5d2c2f5e22ef1dd304ab041b3295c2a.png" src="../../_images/fa7923898e356e3c6cf39a0f9057902fb5d2c2f5e22ef1dd304ab041b3295c2a.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_2um&#39;</span><span class="p">],</span> 
+                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  
+                <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/a5d96c565bcb4bb7c72af3713476bc0df50029be96f8110a10b3d2d06521a4f8.png" src="../../_images/a5d96c565bcb4bb7c72af3713476bc0df50029be96f8110a10b3d2d06521a4f8.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="LR_analysis.html" class="btn btn-neutral float-left" title="Inference of ligand-receptor interactions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../api.html" class="btn btn-neutral float-right" title="API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Humphreys Lab.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

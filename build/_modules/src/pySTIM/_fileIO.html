@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="English" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.pySTIM._fileIO &mdash; STIM 1.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=61a4c737" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=1f8ec04b"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            STIM
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../docs/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api.html">API</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">STIM</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">src.pySTIM._fileIO</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for src.pySTIM._fileIO</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">anndata</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csr_matrix</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<div class="viewcode-block" id="read_xenium">
+<a class="viewcode-back" href="../../../api/src.pySTIM.read_xenium.html#src.pySTIM.read_xenium">[docs]</a>
+<span class="k">def</span> <span class="nf">read_xenium</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads and processes Xenium data from the specified path.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    xenium_path : str</span>
+<span class="sd">        Path to the directory containing Xenium data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    sc.AnnData</span>
+<span class="sd">        Annotated data matrix containing the processed Xenium data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">read_data</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">file_type</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">):</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;csv&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;gzip&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">file_type</span> <span class="o">==</span> <span class="s1">&#39;parquet&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Starting to read and process Xenium data.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Read cell feature matrix using Scanpy</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Reading cell feature matrix...&quot;</span><span class="p">)</span>
+        <span class="n">xenium_adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">,</span> <span class="s1">&#39;cell_feature_matrix.h5&#39;</span><span class="p">))</span>
+
+        <span class="c1"># Read spatial and molecular data</span>
+        <span class="n">cell_coord</span> <span class="o">=</span> <span class="n">read_data</span><span class="p">(</span><span class="s1">&#39;cells.parquet&#39;</span><span class="p">,</span> <span class="s1">&#39;parquet&#39;</span><span class="p">)</span>
+        <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">read_data</span><span class="p">(</span><span class="s1">&#39;transcripts.parquet&#39;</span><span class="p">,</span> <span class="s1">&#39;parquet&#39;</span><span class="p">)</span>
+        <span class="n">cell_seg</span> <span class="o">=</span> <span class="n">read_data</span><span class="p">(</span><span class="s1">&#39;cell_boundaries.parquet&#39;</span><span class="p">,</span> <span class="s1">&#39;parquet&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Remove unassigned transcripts</span>
+        <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="o">~</span><span class="p">(</span><span class="n">molecule_data</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;UNASSIGNED&quot;</span><span class="p">)]</span>
+
+        <span class="c1"># Ensure the &#39;analysis&#39; directory is present</span>
+        <span class="n">analysis_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">,</span> <span class="s1">&#39;analysis&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">analysis_dir</span><span class="p">):</span>
+            <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Extracting analysis.tar.gz...&quot;</span><span class="p">)</span>
+            <span class="n">tar_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">xenium_path</span><span class="p">,</span> <span class="s1">&#39;analysis.tar.gz&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">tar_path</span><span class="p">,</span> <span class="s1">&#39;r:gz&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                <span class="n">tar</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">xenium_path</span><span class="p">)</span>
+
+        <span class="c1"># Read UMAP and clustering results</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Reading UMAP data...&quot;</span><span class="p">)</span>
+        <span class="n">umap_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">analysis_dir</span><span class="p">,</span> <span class="s1">&#39;umap/gene_expression_2_components/projection.csv&#39;</span><span class="p">)</span>
+        <span class="n">clusters_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">analysis_dir</span><span class="p">,</span> <span class="s1">&#39;clustering/gene_expression_graphclust/clusters.csv&#39;</span><span class="p">)</span>
+        <span class="n">xenium_umap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">umap_path</span><span class="p">)</span>
+        <span class="n">xenium_clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">clusters_path</span><span class="p">)</span>
+
+        <span class="c1"># Update AnnData</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">cell_coord</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Filter cells based on UMAP results</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Filtering cells based on UMAP results...&quot;</span><span class="p">)</span>
+        <span class="n">cell_id_keep</span> <span class="o">=</span> <span class="n">xenium_umap</span><span class="p">[</span><span class="s1">&#39;Barcode&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">xenium_adata</span> <span class="o">=</span> <span class="n">xenium_adata</span><span class="p">[</span><span class="n">xenium_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cell_id_keep</span><span class="p">)]</span>
+        <span class="n">cell_seg</span> <span class="o">=</span> <span class="n">cell_seg</span><span class="p">[</span><span class="n">cell_seg</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cell_id_keep</span><span class="p">)]</span>
+
+        <span class="c1"># Update spatial information</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s1">&#39;x_centroid&#39;</span><span class="p">,</span> <span class="s1">&#39;y_centroid&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+        <span class="c1"># Update UMAP data</span>
+        <span class="n">xenium_umap</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obs_names</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s1">&#39;X_umap&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xenium_umap</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+        <span class="c1"># Update cluster information</span>
+        <span class="n">clusters</span> <span class="o">=</span> <span class="n">xenium_clusters</span><span class="p">[</span><span class="s1">&#39;Cluster&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_list</span><span class="p">()</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s1">&#39;cluster&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">clusters</span><span class="p">))</span>
+
+        <span class="c1"># Filter and update molecular data</span>
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Updating molecular data...&quot;</span><span class="p">)</span>
+        <span class="n">gene_names</span> <span class="o">=</span> <span class="n">xenium_adata</span><span class="o">.</span><span class="n">var_names</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="n">molecule_data</span><span class="p">[</span><span class="s1">&#39;feature_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)]</span>
+        <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="n">molecule_data</span><span class="p">[</span><span class="s1">&#39;cell_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">cell_id_keep</span><span class="p">)]</span>
+
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cell_seg</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;transcript&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span>
+        <span class="n">xenium_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;datatype&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Xenium&quot;</span>
+
+        <span class="n">tqdm</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Data loading completed.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">xenium_adata</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to read and process Xenium data: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">read_layers</span><span class="p">(</span><span class="n">hd_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bin_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">:</span>
+<span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Reads VisiumHD layers, optionally including UMAP and cluster data if available.</span>
+
+<span class="sd">	Parameters:</span>
+<span class="sd">	- hd_dir (str): The VisiumHD directory.</span>
+<span class="sd">	- bin_size (int): The size of the bin to determine spatial resolution.</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">	- sc.AnnData: An annotated data object.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	
+	<span class="k">def</span> <span class="nf">compute_corner_points</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">px_width</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">cell_col</span><span class="o">=</span><span class="s1">&#39;barcode&#39;</span><span class="p">,</span>
+								<span class="n">x_col</span><span class="o">=</span><span class="s1">&#39;pxl_row_in_fullres&#39;</span><span class="p">,</span> <span class="n">y_col</span><span class="o">=</span><span class="s1">&#39;pxl_col_in_fullres&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+		<span class="n">corner_coordinates</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;new_x&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">x_col</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">px_width</span><span class="p">,</span>
+			<span class="s1">&#39;new_y&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">y_col</span><span class="p">]</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">px_width</span><span class="p">,</span>
+			<span class="s1">&#39;barcode&#39;</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="n">cell_col</span><span class="p">]</span>
+		<span class="p">}</span>
+		<span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">corner_coordinates</span><span class="p">)</span>
+	
+	<span class="n">layer_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hd_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;binned_outputs/square_</span><span class="si">{</span><span class="n">bin_size</span><span class="si">:</span><span class="s2">03</span><span class="si">}</span><span class="s2">um&quot;</span><span class="p">)</span>
+	<span class="n">h5_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="s2">&quot;filtered_feature_bc_matrix.h5&quot;</span><span class="p">)</span>
+	<span class="n">pos_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="s2">&quot;spatial/tissue_positions.parquet&quot;</span><span class="p">)</span>
+	<span class="n">json_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="s2">&quot;spatial/scalefactors_json.json&quot;</span><span class="p">)</span>
+	
+	<span class="n">layer_data</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">read_10x_h5</span><span class="p">(</span><span class="n">h5_file</span><span class="p">)</span>
+	<span class="n">layer_data</span><span class="o">.</span><span class="n">var_names_make_unique</span><span class="p">()</span>
+	
+	<span class="n">pos</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">pos_file</span><span class="p">)</span>
+	<span class="n">all_cells</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">layer_data</span><span class="o">.</span><span class="n">obs_names</span><span class="p">)</span>
+	<span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">pos</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">all_cells</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="s1">&#39;pxl_row_in_fullres&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="s1">&#39;pxl_col_in_fullres&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)]</span>
+	
+	<span class="n">pos</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="s1">&#39;barcode&#39;</span><span class="p">]</span>
+	<span class="n">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">layer_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="p">]</span>
+	<span class="n">layer_data</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="n">layer_data</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+	
+	<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+		<span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+		
+	<span class="c1"># Adjust for bin_size in spatial resolution</span>
+	<span class="n">px_width</span> <span class="o">=</span> <span class="n">bin_size</span> <span class="o">/</span> <span class="n">json_data</span><span class="p">[</span><span class="s2">&quot;microns_per_pixel&quot;</span><span class="p">]</span>
+	<span class="n">corner_coordinates</span> <span class="o">=</span> <span class="n">compute_corner_points</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">px_width</span><span class="p">)</span>
+	<span class="n">layer_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">corner_coordinates</span><span class="p">[[</span><span class="s1">&#39;new_y&#39;</span><span class="p">,</span> <span class="s1">&#39;new_x&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">values</span>
+	
+	<span class="c1"># Load UMAP and clusters if available</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">layer_dir</span> <span class="o">+</span> <span class="s2">&quot;/analysis&quot;</span><span class="p">):</span>
+		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No analysis directory for bin size </span><span class="si">{</span><span class="n">bin_size</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+		
+	<span class="n">umap_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="s1">&#39;analysis/umap/gene_expression_2_components/projection.csv&#39;</span><span class="p">)</span>
+	<span class="n">clusters_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="s1">&#39;analysis/clustering/gene_expression_graphclust/clusters.csv&#39;</span><span class="p">)</span>
+	
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">umap_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">clusters_path</span><span class="p">):</span>
+		<span class="n">umap</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">umap_path</span><span class="p">)</span>
+		<span class="n">clusters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">clusters_path</span><span class="p">)</span>
+		<span class="n">umap</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">umap</span><span class="p">[</span><span class="s1">&#39;Barcode&#39;</span><span class="p">]</span>
+		<span class="n">clusters</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">clusters</span><span class="p">[</span><span class="s1">&#39;Barcode&#39;</span><span class="p">]</span>
+		
+		<span class="c1"># Filter AnnData based on cells present in UMAP</span>
+		<span class="n">cells_keep</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="n">layer_data</span><span class="o">.</span><span class="n">obs_names</span><span class="p">)</span>
+		<span class="n">layer_data</span> <span class="o">=</span> <span class="n">layer_data</span><span class="p">[</span><span class="n">cells_keep</span><span class="p">]</span>
+		<span class="n">layer_data</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;X_umap&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cells_keep</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;UMAP-1&quot;</span><span class="p">,</span> <span class="s2">&quot;UMAP-2&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+		<span class="n">layer_data</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;cluster&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clusters</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cells_keep</span><span class="p">,</span> <span class="s2">&quot;Cluster&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+	
+	
+	<span class="n">layer_data</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;spatial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;scalefactors&#39;</span><span class="p">:</span> <span class="n">json_data</span><span class="p">,</span>
+		<span class="p">}</span>	
+	<span class="n">layer_data</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">][</span><span class="s2">&quot;images&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="n">res</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">layer_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;spatial/tissue_</span><span class="si">{</span><span class="n">res</span><span class="si">}</span><span class="s2">_image.png&quot;</span><span class="p">)))</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;hires&quot;</span><span class="p">,</span> <span class="s2">&quot;lowres&quot;</span><span class="p">]</span>
+	<span class="p">}</span>
+	
+	<span class="k">return</span> <span class="n">layer_data</span>
+
+<div class="viewcode-block" id="read_visiumHD">
+<a class="viewcode-back" href="../../../api/src.pySTIM.read_visiumHD.html#src.pySTIM.read_visiumHD">[docs]</a>
+<span class="k">def</span> <span class="nf">read_visiumHD</span><span class="p">(</span><span class="n">hd_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">bins</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads and processes Visium HD data for specified bin sizes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hd_dir : str</span>
+<span class="sd">            Directory containing VisiumHD data.</span>
+<span class="sd">    bins : Any</span>
+<span class="sd">            Specific bin sizes to load, can be &#39;all&#39;, a single integer, or a list of integers.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dict[str, sc.AnnData]</span>
+<span class="sd">            A dictionary of annotated data objects indexed by bin size.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">bins</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">bins</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bins</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">bin_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">for</span> <span class="n">bin_size</span> <span class="ow">in</span> <span class="n">bins</span><span class="p">):</span>
+        <span class="n">bin_sizes</span> <span class="o">=</span> <span class="n">bins</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid &#39;bins&#39; parameter. It must be &#39;all&#39;, a single integer, or a list of integers.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">adata_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">bin_size</span> <span class="ow">in</span> <span class="n">bin_sizes</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading </span><span class="si">{</span><span class="n">bin_size</span><span class="si">}</span><span class="s2">um binned data...&quot;</span><span class="p">)</span>
+        <span class="n">adata_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;bin_</span><span class="si">{</span><span class="n">bin_size</span><span class="si">}</span><span class="s2">um&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">read_layers</span><span class="p">(</span><span class="n">hd_dir</span><span class="p">,</span> <span class="n">bin_size</span><span class="o">=</span><span class="n">bin_size</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">adata_dict</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">load_xenium_baysor</span><span class="p">(</span><span class="n">data_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sc</span><span class="o">.</span><span class="n">AnnData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load Baysor segmented Xenium data.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - data_dir (str): Path to the Baysor output directory.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - two Anndata object, one saves cells, the other saves polygons.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading baysor segmentation output...&quot;</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;segmentation_counts.tsv&quot;</span><span class="p">),</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">cells_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;segmentation_cell_stats.csv&quot;</span><span class="p">))</span>
+    <span class="n">cells_meta</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">cells_meta</span><span class="o">.</span><span class="n">cell</span>
+
+    <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;segmentation.csv&quot;</span><span class="p">))</span>
+    <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;cell&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;x_location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;y_location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    
+    <span class="n">features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">counts</span><span class="p">[</span><span class="s2">&quot;gene&quot;</span><span class="p">])</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">adata</span> <span class="o">=</span> <span class="n">anndata</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">cells_meta</span><span class="p">)</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="n">features</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;datatype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;xenium&quot;</span>
+
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;x_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span> <span class="c1">## convert pixel to micron</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;y_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="n">adata</span><span class="o">.</span><span class="n">obsm</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">adata</span><span class="o">.</span><span class="n">obs</span><span class="p">[[</span><span class="s2">&quot;x_centroid&quot;</span><span class="p">,</span> <span class="s2">&quot;y_centroid&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading polygons...&quot;</span><span class="p">)</span>
+    <span class="n">polygon_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon_meta.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_count</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon_count.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;x_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;x_location&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;y_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;y_location&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+
+    <span class="n">poly_counts</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">polygon_count</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">polygon_centroid</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;polygon_number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">polygon_meta</span> <span class="o">=</span> <span class="n">polygon_meta</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">polygon_centroid</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+    <span class="n">polygon_meta</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">polygon_meta</span><span class="o">.</span><span class="n">polygon_number</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">poly_adata</span> <span class="o">=</span> <span class="n">anndata</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">poly_counts</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">polygon_meta</span><span class="p">)</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">polygon_count</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;seg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;transcript&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating polygons...&quot;</span><span class="p">)</span>
+    <span class="n">seg</span> <span class="o">=</span> <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">seg</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">)</span>
+    <span class="n">all_polygons</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">seg</span><span class="p">[</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">])))</span>
+    <span class="n">new_lib</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s1">&#39;coordinates&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">grouped</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()],</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Polygon&#39;</span>
+    <span class="p">}</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">all_polygons</span><span class="p">)]</span>
+
+    <span class="n">new_poly</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_polygons</span><span class="p">),</span> <span class="n">new_lib</span><span class="p">))</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_poly</span>
+
+    <span class="k">return</span> <span class="n">adata</span><span class="p">,</span> <span class="n">poly_adata</span>
+
+<span class="k">def</span> <span class="nf">load_polygon</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading baysor segmentation output...&quot;</span><span class="p">)</span>
+    <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;segmentation.csv&quot;</span><span class="p">))</span>
+    <span class="n">molecule_data</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;cell&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;x_location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;y_location&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading polygons...&quot;</span><span class="p">)</span>
+    <span class="n">polygon_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_meta</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon_meta.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_count</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="s2">&quot;polygon_count.csv&quot;</span><span class="p">))</span>
+    <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;x_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;x_location&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+    <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;y_centroid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="p">[</span><span class="s2">&quot;y_location&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2125</span>
+
+    <span class="n">poly_counts</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span><span class="n">polygon_count</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+    <span class="n">polygon_centroid</span> <span class="o">=</span> <span class="n">polygon_df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;polygon_number&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="n">polygon_meta</span> <span class="o">=</span> <span class="n">polygon_meta</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">polygon_centroid</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+    <span class="n">polygon_meta</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">polygon_meta</span><span class="o">.</span><span class="n">polygon_number</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">poly_adata</span> <span class="o">=</span> <span class="n">anndata</span><span class="o">.</span><span class="n">AnnData</span><span class="p">(</span><span class="n">poly_counts</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">polygon_meta</span><span class="p">)</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">var_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">polygon_count</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;seg&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">polygon_df</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;transcript&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">molecule_data</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating polygons...&quot;</span><span class="p">)</span>
+    <span class="n">seg</span> <span class="o">=</span> <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;seg&#39;</span><span class="p">]</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">seg</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">)</span>
+    <span class="n">all_polygons</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">seg</span><span class="p">[</span><span class="s2">&quot;polygon_number&quot;</span><span class="p">])))</span>
+    <span class="n">new_lib</span> <span class="o">=</span> <span class="p">[{</span>
+        <span class="s1">&#39;coordinates&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">grouped</span><span class="o">.</span><span class="n">get_group</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()],</span>
+        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Polygon&#39;</span>
+    <span class="p">}</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">all_polygons</span><span class="p">)]</span>
+
+    <span class="n">new_poly</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">all_polygons</span><span class="p">),</span> <span class="n">new_lib</span><span class="p">))</span>
+    <span class="n">poly_adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s1">&#39;poly&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_poly</span>
+
+    <span class="k">return</span>  <span class="n">poly_adata</span>
+
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Humphreys Lab.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
