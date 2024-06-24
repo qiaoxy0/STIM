@@ -12,3 +12,5 @@ Tutorials
    Cell Neighborhoods Mapping and Functional Characterization <notebooks/CN_analysis>
 
    Inference of ligand-receptor interactions <notebooks/LR_analysis>
+
+   Core visualization functions <notebooks/visualization>

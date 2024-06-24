@@ -1,61 +1,185 @@
 import os
 import anndata
+import tarfile
 import scanpy as sc
 import pandas as pd
 import numpy as np
 from typing import Any
 from tqdm import tqdm
 from scipy.sparse import csr_matrix
+from PIL import Image
+from typing import Any, Dict
+import logging
 
-def load_xenium(xenium_path: str) -> Any:
-    """
-    Load Xenium data into an AnnData object.
+def read_xenium(xenium_path: str) -> sc.AnnData:
+
+    def read_data(file_name, file_type='csv'):
+        file_path = os.path.join(xenium_path, file_name)
+        tqdm.write(f"Reading {file_name}...")
+        if file_type == 'csv':
+            return pd.read_csv(file_path, compression='gzip')
+        elif file_type == 'parquet':
+            return pd.read_parquet(file_path)
     
-    Parameters:
-    - xenium_path (str): Path to the Xenium output directory.
+    try:
+        tqdm.write("Starting to read and process Xenium data.")
 
-    Returns:
-    - AnnData.
-    """
+        # Read cell feature matrix using Scanpy
+        tqdm.write("Reading cell feature matrix...")
+        xenium_adata = sc.read_10x_h5(os.path.join(xenium_path, 'cell_feature_matrix.h5'))
+
+        # Read spatial and molecular data
+        cell_coord = read_data('cells.parquet', 'parquet')
+        molecule_data = read_data('transcripts.parquet', 'parquet')
+        cell_seg = read_data('cell_boundaries.parquet', 'parquet')
+
+        # Remove unassigned transcripts
+        molecule_data = molecule_data[~(molecule_data['cell_id'] == "UNASSIGNED")]
+
+        # Ensure the 'analysis' directory is present
+        analysis_dir = os.path.join(xenium_path, 'analysis')
+        if not os.path.exists(analysis_dir):
+            tqdm.write("Extracting analysis.tar.gz...")
+            tar_path = os.path.join(xenium_path, 'analysis.tar.gz')
+            with tarfile.open(tar_path, 'r:gz') as tar:
+                tar.extractall(path=xenium_path)
+
+        # Read UMAP and clustering results
+        tqdm.write("Reading UMAP data...")
+        umap_path = os.path.join(analysis_dir, 'umap/gene_expression_2_components/projection.csv')
+        clusters_path = os.path.join(analysis_dir, 'clustering/gene_expression_graphclust/clusters.csv')
+        xenium_umap = pd.read_csv(umap_path)
+        xenium_clusters = pd.read_csv(clusters_path)
+
+        # Update AnnData
+        xenium_adata.obs = cell_coord.copy()
+
+        # Filter cells based on UMAP results
+        tqdm.write("Filtering cells based on UMAP results...")
+        cell_id_keep = xenium_umap['Barcode'].tolist()
+        xenium_adata = xenium_adata[xenium_adata.obs['cell_id'].isin(cell_id_keep)]
+        cell_seg = cell_seg[cell_seg['cell_id'].isin(cell_id_keep)]
+
+        # Update spatial information
+        xenium_adata.obsm['spatial'] = xenium_adata.obs[['x_centroid', 'y_centroid']].copy().to_numpy()
+
+        # Update UMAP data
+        xenium_umap.index = xenium_adata.obs_names
+        xenium_adata.obsm['X_umap'] = xenium_umap.iloc[:, 1:3].copy().to_numpy()
+
+        # Update cluster information
+        clusters = xenium_clusters['Cluster'].to_list()
+        xenium_adata.obs['cluster'] = list(map(str, clusters))
+
+        # Filter and update molecular data
+        tqdm.write("Updating molecular data...")
+        gene_names = xenium_adata.var_names.astype(str).tolist()
+        molecule_data = molecule_data[molecule_data['feature_name'].isin(gene_names)]
+        molecule_data = molecule_data[molecule_data['cell_id'].isin(cell_id_keep)]
+
+        xenium_adata.uns['seg'] = cell_seg
+        xenium_adata.uns['transcript'] = molecule_data
+        xenium_adata.uns['datatype'] = "Xenium"
+
+        tqdm.write("Data loading completed.")
+        return xenium_adata
     
-    xenium_adata = sc.read_10x_h5(os.path.join(xenium_path, 'cell_feature_matrix.h5'))
+    except Exception as e:
+        raise RuntimeError(f"Failed to read and process Xenium data: {str(e)}")
 
-    cell_coord = pd.read_csv(os.path.join(xenium_path, 'cells.csv.gz'), compression='gzip')
-    molecule_data = pd.read_csv(os.path.join(xenium_path, 'transcripts.csv.gz'), compression='gzip')
-    cell_seg = pd.read_csv(os.path.join(xenium_path, 'cell_boundaries.csv.gz'), compression='gzip')
-    xenium_umap = pd.read_csv(os.path.join(xenium_path, 'analysis/umap/gene_expression_2_components/projection.csv'))
-    xenium_clusters = pd.read_csv(os.path.join(xenium_path, 'analysis/clustering/gene_expression_graphclust/clusters.csv'))
+def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
+	"""
+	Reads VisiumHD layers.
 
-    # Replace cell IDs that are -1 with 0
-    molecule_data.loc[molecule_data['cell_id'] == -1, 'cell_id'] = 0
-    
-    xenium_adata.obs = cell_coord.copy()
+	Parameters:
+	- hd_dir (str): The VisiumHD directory.
+	- bin_size (int): The size of the bin to determine spatial resolution.
 
-    # Filter cells based on UMAP results
-    cell_id_keep = xenium_umap.Barcode.tolist()
-    xenium_adata = xenium_adata[xenium_adata.obs.cell_id.isin(cell_id_keep)]
-    cell_seg = cell_seg[cell_seg.cell_id.isin(cell_id_keep)]
+	Returns:
+	- sc.AnnData: An annotated data object.
+	"""
+	
+	def compute_corner_points(df, px_width, cell_col='barcode', x_col='pxl_row_in_fullres', y_col='pxl_col_in_fullres'):
+		corner_coordinates = {
+			'new_x': df[x_col] - 0.5 * px_width,
+			'new_y': df[y_col] - 0.5 * px_width,
+			'barcode': df[cell_col]
+		}
+		return pd.DataFrame(corner_coordinates)
+	
+	layer_dir = os.path.join(hd_dir, f"binned_outputs/square_{bin_size:03}um")
+	h5_file = os.path.join(layer_dir, "filtered_feature_bc_matrix.h5")
+	pos_file = os.path.join(layer_dir, "spatial/tissue_positions.parquet")
+	json_file = os.path.join(layer_dir, "spatial/scalefactors_json.json")
+	
+	layer_data = sc.read_10x_h5(h5_file)
+	
+	all_cells = set(layer_data.obs_names)
+	
+	pos = pd.read_parquet(pos_file)
+	pos = pos[pos['barcode'].isin(all_cells) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
+	
+	with open(json_file) as f:
+		json_data = json.load(f)
+		
+	umap_path = os.path.join(layer_dir, 'analysis/umap/gene_expression_2_components/projection.csv')
+	clusters_path = os.path.join(layer_dir, 'analysis/clustering/gene_expression_graphclust/clusters.csv')
+	umap = pd.read_csv(umap_path)
+	clusters = pd.read_csv(clusters_path)
+	
+	umap.index = umap['Barcode']
+	cells_keep = umap.index.to_list()
+	layer_data = layer_data[layer_data.obs.index.isin(cells_keep)]
+	layer_data.obsm["X_umap"] = umap.loc[layer_data.obs.index, ["UMAP-1", "UMAP-2"]].to_numpy()
+	pos.index = pos['barcode'] 
+	pos = pos.loc[layer_data.obs.index, ]
+	layer_data.obs = layer_data.obs.join(pos)
 
-    # Update spatial information
-    xenium_adata.obsm["spatial"] = xenium_adata.obs[["x_centroid", "y_centroid"]].copy().to_numpy()
+	clusters.index = clusters['Barcode']
+	layer_data.obs["cluster"] = clusters.loc[layer_data.obs.index, "Cluster"].to_numpy()
+	
+	px_width = bin_size / json_data["microns_per_pixel"]
+	corner_coordinates = compute_corner_points(pos, px_width)
+	
+	layer_data.uns['spatial'] = {
+			'scalefactors': json_data,
+		}
+	
+	layer_data.obsm["spatial"] = corner_coordinates[['new_y', 'new_x']].values
+	layer_data.uns["spatial"]["images"] = {
+		res: np.asarray(Image.open(os.path.join(layer_dir, f"spatial/tissue_{res}_image.png"))) for res in ["hires", "lowres"]
+	}
+    layer_data.var_names_make_unique()
 
-    # Update UMAP data
-    xenium_umap.index = xenium_adata.obs_names
-    xenium_adata.obsm['X_umap'] = xenium_umap.iloc[:, 1:3].copy().to_numpy()
+	return layer_data
 
-    # Update cluster information
-    clusters = xenium_clusters['Cluster'].to_list()
-    xenium_adata.obs['leiden'] = list(map(str, clusters))
-
-    gene_names = xenium_adata.var_names.astype(str).tolist()
-    molecule_data = molecule_data[molecule_data.feature_name.isin(gene_names)]
-    molecule_data = molecule_data[molecule_data.cell_id.isin(cell_id_keep)]
-
-    xenium_adata.uns['seg'] = cell_seg
-    xenium_adata.uns['transcript'] = molecule_data
-    xenium_adata.uns['datatype'] = "xenium"
-
-    return xenium_adata
+def read_visiumHD(hd_dir: str, bins: Any = "all") -> Dict[str, sc.AnnData]:
+	"""
+	Loads and processes Visium HD data for specified bin sizes.
+	
+	Parameters:
+	- hd_dir (str): Directory containing VisiumHD data.
+	- bins (Any): Specific bin sizes to load, can be 'all', a single integer, or a list of integers.
+	
+	Returns:
+	- Dict[str, sc.AnnData]: A dictionary of annotated data objects indexed by bin size.
+	"""
+	if isinstance(bins, str) and bins.lower() == "all":
+		bin_sizes = [2, 8, 16]
+	elif isinstance(bins, int):
+		bin_sizes = [bins]
+	elif isinstance(bins, list) and all(isinstance(bin_size, int) for bin_size in bins):
+		bin_sizes = bins
+	else:
+		raise ValueError("Invalid 'bins' parameter. It must be 'all', a single integer, or a list of integers.")
+		
+	adata_dict = {}
+	
+	for bin_size in bin_sizes:
+		logging.info(f"Loading {bin_size}um binned data...")
+		adata_dict[f"bin_{bin_size}um"] = read_layers(hd_dir, bin_size=bin_size)
+		
+	return adata_dict
 
 def load_xenium_baysor(data_dir):
     """

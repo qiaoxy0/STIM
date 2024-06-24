@@ -15,215 +15,13 @@ import scanpy as sc
 from ._utils import to_hex, crop, get_color_map, split_field
 from typing import Any, List, Optional, Union, Dict, Tuple
 
-def plot_polygon(adata: Any, 
-                 plot_type: str = "cell", 
-                 xlims: Optional[Tuple[float, float]] = None, 
-                 ylims: Optional[Tuple[float, float]] = None, 
-                 color_by: Optional[str] = None, 
-                 genes: Optional[Union[str, List[str]]] = None, 
-                 seed: int = 123, 
-                 alpha: float = 0.8,
-                 cmap: Optional[Union[str, Dict[str, str]]] = None, 
-                 ptsize: float = 0.01, 
-                 ticks: bool = False, 
-                 dpi: int = 300,
-                 width: int = 5, 
-                 height: int = 5, 
-                 edgecolor: str = "#808080", 
-                 linewidth: float = 0.2,
-                 legend_col = 1) -> None:
-    """
-    Plot polygons based on the provided adata.
-
-    Parameters:
-    - adata: A anndata object.
-    - plot_type: The type of plot ('cell', 'gene', or 'transcript').
-    - xlims: Tuple containing the x-axis limits.
-    - ylims: Tuple containing the y-axis limits.
-    - color_by: Category from adata.obs by which to color the output.
-    - genes: Genes to be considered for 'gene' or 'transcript' plots.
-    - seed: Seed for random color generation.
-    - alpha: Opacity of polygons.
-    - cmap: Color map or a dictionary to map values to colors.
-    - ptsize: Size of points in the scatter plot.
-    - ticks: Whether to display axis ticks.
-    - dpi: Resolution.
-    - width: Width of the figure.
-    - height: Height of the figure.
-    - edgecolor: Color of the polygon edge.
-    - linewidth: Width of the polygon edge line.
-
-    Returns:
-    None: Displays the desired plot based on the given parameters.
-    """
-    
-    try:
-        adata.uns['poly']
-    except AttributeError:
-        print('Please create polygons first! To create polygons, please use the create_polygons function.')
-    else:
-        poly_dict = {idx + 1: adata.uns['poly'][key] for idx, key in enumerate(adata.uns['poly'].keys())}
-        new_lib = [*poly_dict.values()]
-
-        subset_idx, new_coord = crop(adata, xlims, ylims)
-
-        print("Total number of polygons: ", len(new_coord))
-
-        if plot_type == "cell":
-            if color_by is None:
-                cols = ['#6699cc'] * len(subset_idx)
-            else:
-                map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
-                cols = list(new_coord[color_by].map(map_dict))
-
-            fig, ax = plt.subplots(dpi=dpi, figsize=(width, height))
-            if not ticks:
-                plt.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
-            [ax.add_patch(PolygonPatch(new_lib[i], fc=cols[j], ec=edgecolor, alpha=alpha, zorder=0.5, linewidth=linewidth)) for j, i in
-             enumerate(subset_idx)]
-            ax.axis('scaled')
-            ax.grid(False)
-            ax.invert_yaxis()
-            
-            scalebar = AnchoredSizeBar(ax.transData,
-                       25, ' ', 'lower right', 
-                       pad=0.5,
-                       sep=5,
-                       color='black',
-                       frameon=False,
-                       size_vertical=2,
-                       fontproperties=fm.FontProperties(size=12))
-
-
-            ax.add_artist(scalebar)
-                
-            if color_by is not None:
-                markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='o', linestyle='') for color in
-                           map_dict.values()]
-                ax.legend(markers, map_dict.keys(),
-                          numpoints=1, loc='center left', bbox_to_anchor=(1, 0.5),
-                          frameon=False, ncol=legend_col)
-            plt.show()
-
-        elif plot_type == "gene":
-            if isinstance(genes, str):
-                genes = [genes]
-
-            def create_gene_plot(ax, gene, counts, cmap, subset_idx, alpha, edgecolor, ticks):
-                # c_max = np.quantile(counts, 0.99)
-                c_max = max(counts)
-                bar_colors = [cmap(c / c_max) for c in counts]
-                bar_colors = np.clip(bar_colors, 0, 1)
-                all_colors = [to_hex(i) for i in bar_colors]
-                cols = [all_colors[i] for i in subset_idx]
-                if not ticks:
-                    ax.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
-
-                ax.set_title(gene)
-                [ax.add_patch(
-                    PolygonPatch(new_lib[i], fc=cols[j], ec=edgecolor, alpha=alpha, zorder=0.1, linewidth=linewidth)) for j, i
-                    in enumerate(subset_idx)]
-                ax.axis('scaled')
-                ax.grid(False)
-                ax.invert_yaxis()
-                
-                scalebar = AnchoredSizeBar(ax.transData,
-                       25, ' ', 'lower right', 
-                       pad=0.5,
-                       sep=5,
-                       color='black',
-                       frameon=False,
-                       size_vertical=2,
-                       fontproperties=fm.FontProperties(size=12))
-
-
-                ax.add_artist(scalebar)
-                norm = matplotlib.colors.Normalize(vmin=min(counts), vmax=c_max)
-
-                return norm
-
-            n_rows = math.ceil(len(genes) / 3)
-            if len(genes) < 4:
-                n_cols = len(genes)
-            else:
-                n_cols = 3
-
-            fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=(n_cols * width, n_rows * height), dpi=dpi)
-            # plt.subplots_adjust(hspace=0.5)
-
-            if len(genes) == 1:
-                counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
-                norm = create_gene_plot(axs, genes[0], counts, cmap, subset_idx, alpha, edgecolor, ticks)
-                divider = make_axes_locatable(axs)
-                cax = divider.append_axes("right", size="5%", pad=0.05)
-                fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax = axs, cax=cax)
-            else:
-                axs = axs.flatten()
-                for gene, ax in zip(genes, axs):
-                    counts = sc.get.obs_df(adata, keys=gene).to_list()
-                    norm = create_gene_plot(ax, gene, counts, cmap, subset_idx, alpha, edgecolor, ticks)
-                    divider = make_axes_locatable(ax)
-                    cax = divider.append_axes("right", size="5%", pad=0.05)
-                    plt.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, cax=cax)
-
-            if len(genes) < n_rows * n_cols:
-                for idx in range(len(genes), n_rows * n_cols):
-                    fig.delaxes(axs[idx])
-
-            plt.tight_layout()
-            plt.show()
-
-        elif plot_type == "transcript":
-
-            mol_data = adata.uns['transcript']
-            cell_id_keep = new_coord.cell_id.tolist()
-            mol_data2 = mol_data[mol_data.cell_id.isin(cell_id_keep) & mol_data.feature_name.isin(genes)]
-            if cmap is None:
-                random.seed(seed)
-                tx_col = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
-                          for i in range(len(genes))]
-                map_dict = {genes[i]: tx_col[i] for i in range(len(genes))}
-            else:
-                map_dict = cmap
-
-            all_tx = mol_data2['feature_name'].to_list()
-            all_tx = pd.DataFrame(all_tx, columns=['colors'])
-            all_tx = all_tx.replace({'colors': map_dict})
-
-            fig, ax = plt.subplots(dpi=dpi, figsize=(width, height))
-            if not ticks:
-                plt.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
-            [ax.add_patch(PolygonPatch(new_lib[i], fc='#fcfcfa', ec=edgecolor, alpha=alpha, zorder=0.5, linewidth=linewidth)) for j, i in
-             enumerate(subset_idx)]
-            scalebar = AnchoredSizeBar(ax.transData,
-                       25, ' ', 'lower right', 
-                       pad=0.5,
-                       sep=5,
-                       color='black',
-                       frameon=False,
-                       size_vertical=2,
-                       fontproperties=fm.FontProperties(size=12))
-
-
-            ax.add_artist(scalebar)
-            
-            ax.scatter(mol_data2.x_location, mol_data2.y_location, c=all_tx.colors, s=ptsize)
-            ax.axis('scaled')
-            ax.grid(False)
-            ax.invert_yaxis()
-            markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='o', linestyle='') for color in map_dict.values()]
-            ax.legend(markers, map_dict.keys(),
-                      numpoints=1, loc='center left', bbox_to_anchor=(1, 0.5),
-                      frameon=False, ncol=legend_col)
-            plt.show()
-            
-
-
 def plot_scatter(
     adata: sc.AnnData,
     xlims: Optional[tuple] = None,
     ylims: Optional[tuple] = None,
     color_by: Optional[str] = None,
+    highlight_cell: Optional[str] = None,
+    highlight_color: str = '#FC4B42', 
     genes: Optional[Union[str, List[str]]] = None,
     seed: int = 123,
     alpha: float = 0.8,
@@ -231,8 +29,7 @@ def plot_scatter(
     ptsize: float = 0.1,
     ticks: bool = False,
     dpi: int = 300,
-    width: int = 5,
-    height: int = 5,
+    figsize: tuple = (5,5),
     legend_loc: str = "center left",
     legend_col: int = 2,
     bbox_to_anchor: tuple = (1.0, 0.5),
@@ -240,7 +37,7 @@ def plot_scatter(
 ) -> None:
     """
     Scatter plot of spatial omics data based on AnnData object.
-
+    
     Parameters
     ----------
     adata : sc.AnnData
@@ -251,6 +48,10 @@ def plot_scatter(
         The y-axis limits for cropping, by default None.
     color_by : str, optional
         The column to color by, by default None.
+    highlight_cell : str, optional
+        Cell type to highlight, by default None.
+    highlight_color : str, optional
+        Color for the highlighted cells, by default '#FC4B42'.
     genes : Union[str, List[str]], optional
         Gene to plot, by default None.
     seed : int, optional
@@ -265,10 +66,8 @@ def plot_scatter(
         Whether to show ticks on the plot, by default False.
     dpi : int, optional
         Resolution for the plot, by default 300.
-    width : int, optional
-        Width of the plot, by default 5.
-    height : int, optional
-        Height of the plot, by default 5.
+    figsize : tuple, optional
+        Size of the figure, by default (5, 5).
     legend_loc : str, optional
         Location of the legend, by default "center left".
     legend_col : int, optional
@@ -277,15 +76,16 @@ def plot_scatter(
         Bounding box to anchor the legend, by default (1.0, 0.5).
     save : str, optional
         Filename to save the plot to, by default None.
-
+    highlight_cells : List[str], optional
+        List of cell types to highlight, by default None.
+    
     Returns
     -------
     None
     """
-
+    
     def plot(
         ax: plt.Axes,
-        group: str, 
         new_coord: pd.DataFrame, 
         colors, 
         alpha: float = 0.8, 
@@ -310,60 +110,47 @@ def plot_scatter(
         ax.grid(False)
         ax.invert_yaxis()
 
-    group = list(adata.obs.ident.cat.categories)
-
-    n_rows = math.ceil(len(group) / 6)
-    if len(group) < 6:
-        n_cols = len(group)
-    else:
-        n_cols = 6
-
-    fig, axs = plt.subplots(
-        nrows=n_rows,
-        ncols=n_cols,
-        figsize=(n_cols * width, n_rows * height),
+    fig, ax = plt.subplots(
+        figsize=figsize,
         dpi=dpi,
         layout="constrained",
     )
 
     if not genes:
-        if len(group) == 1:
-            subset_idx, new_coord = crop(adata, xlims, ylims)
-            map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
-            coords = adata[
-                new_coord.index,
-            ].obsm["spatial"]
-            colors = new_coord[color_by].map(map_dict)
-            plot(axs, group[0], coords, colors, alpha, ptsize, ticks)
+        
+        subset_idx, new_coord = crop(adata, xlims, ylims)
+        map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+        coords = adata[
+            new_coord.index,
+        ].obsm["spatial"]
+        colors = new_coord[color_by].map(map_dict)
+
+        if highlight_cell:
+            if isinstance(highlight_cell, str):
+                highlight_cell = [highlight_cell]
+            mask = new_coord[color_by].isin(highlight_cell)
+            colors = pd.Series('#BFBFBF', index=new_coord.index)
+            colors[mask] = highlight_color
+
+        plot(ax, coords, colors, alpha, ptsize, ticks)
+        
+        if not highlight_cell:
+            markers = [plt.Line2D([0, 0], [0, 0], color=color, marker="o", linestyle="") for color in map_dict.values()]
+            labels = map_dict.keys()
         else:
-            axs = axs.flatten()
-            for g, ax in zip(group, axs):
-                tmp = adata[adata.obs.ident == g]
-                subset_idx, new_coord = crop(tmp, xlims, ylims)
-                map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
-                colors = new_coord[color_by].map(map_dict)
-                coords = tmp[
-                    new_coord.index,
-                ].obsm["spatial"]
-                plot(ax, g, coords, colors, alpha, ptsize, ticks)
-
-            for ax in axs[len(group) :]:
-                ax.axis("off")
-                ax.set_visible(False)
-
-        markers = [
-            plt.Line2D([0, 0], [0, 0], color=color, marker="o", linestyle="")
-            for color in map_dict.values()
-        ]
+            markers = [plt.Line2D([0, 0], [0, 0], color=highlight_color, marker="o", linestyle="")]
+            labels = highlight_cell
+        
         fig.legend(
-            markers,
-            map_dict.keys(),
-            numpoints=1,
-            loc=legend_loc,
-            bbox_to_anchor=bbox_to_anchor,
-            frameon=False,
-            ncol=legend_col,
-        )
+                    markers,
+                    labels,
+                    numpoints=1,
+                    loc=legend_loc,
+                    bbox_to_anchor=bbox_to_anchor,
+                    frameon=False,
+                    ncol=legend_col,
+                )
+        
         if save:
             plt.savefig(save, transparent=True, bbox_inches="tight")
 
@@ -373,82 +160,208 @@ def plot_scatter(
         if isinstance(genes, str):
             genes = [genes]
 
-        if len(group) == 1:
-            counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
-            subset_idx, new_coord = crop(adata, xlims, ylims)
+        counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
+        subset_idx, new_coord = crop(adata, xlims, ylims)
 
-            cmap = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+        cmap = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
 
-            c_max = np.quantile(counts, 0.99)
-            c_min = min(counts)
-            bar_colors = [cmap(c / c_max) for c in counts]
-            bar_colors = np.clip(bar_colors, 0, 1)
-            all_colors = [to_hex(i) for i in bar_colors]
-            all_colors_list = [all_colors[i] for i in subset_idx]
+        c_max = np.quantile(counts, 0.99)
+        c_min = min(counts)
+        bar_colors = [cmap(c / c_max) for c in counts]
+        bar_colors = np.clip(bar_colors, 0, 1)
+        all_colors = [to_hex(i) for i in bar_colors]
+        all_colors_list = [all_colors[i] for i in subset_idx]
 
-            coords = adata[
-                new_coord.index,
-            ].obsm["spatial"]
+        coords = adata[
+            new_coord.index,
+        ].obsm["spatial"]
 
-            plot(axs,group[0],coords,all_colors_list,alpha,ptsize,ticks)
-            
-            norm = matplotlib.colors.Normalize(vmin=c_min, vmax=c_max)
-            cbar_ax = fig.add_axes([1.05, 0.2, 0.02, 0.6])
-            fig.colorbar(
-                matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax
-            )
-
-        else:
-            c_max_list = []
-            c_min_list = []
-
-            axs = axs.flatten()
-            for g, ax in zip(group, axs):
-                tmp = adata[adata.obs.ident == g]
-                counts = sc.get.obs_df(tmp, keys=genes[0]).to_list()
-                c_max_list.append(np.quantile(counts, 0.99))
-                c_min_list.append(min(counts))
-
-            c_max = max(c_max_list)
-            c_min = min(c_min_list)
-
-            for g, ax in zip(group, axs.flatten()):
-                tmp = adata[adata.obs.ident == g]
-                counts = sc.get.obs_df(tmp, keys=genes[0]).to_list()
-                subset_idx, new_coord = crop(tmp, xlims, ylims)
-
-                cmap = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
-
-                bar_colors = [cmap(c / c_max) for c in counts]
-                bar_colors = np.clip(bar_colors, 0, 1)
-                all_colors = [to_hex(i) for i in bar_colors]
-
-                coords = tmp[
-                    new_coord.index,
-                ].obsm["spatial"]
-
-                all_colors_list = [all_colors[i] for i in subset_idx]
-                plot(ax, g, coords, all_colors_list, alpha, ptsize, ticks)
-
-            for ax in axs[len(group) :]:
-                ax.axis("off")
-
-            norm = matplotlib.colors.Normalize(vmin=c_min, vmax=c_max)
-            cbar_ax = fig.add_axes([1.02, 0.2, 0.005, 0.6])
-            cb = fig.colorbar(
-                matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap),
-                cax=cbar_ax,
-                orientation="vertical",
-            )
-            """
-			if n_rows == 1:
-				fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axs[:], shrink=0.6, location="right")
-			else:
-				fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axs[:, :], shrink=0.6, location="right")
-			"""
+        plot(ax, coords, all_colors_list, alpha, ptsize, ticks)
+        
+        norm = matplotlib.colors.Normalize(vmin=c_min, vmax=c_max)
+        cbar_ax = fig.add_axes([1.05, 0.2, 0.02, 0.6])
+        fig.colorbar(
+            matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cbar_ax
+        )
         if save:
             plt.savefig(save)
 
+        plt.show()
+        
+def plot_polygon(adata: Any, 
+                 plot_type: str = "cell", 
+                 xlims: Optional[Tuple[float, float]] = None, 
+                 ylims: Optional[Tuple[float, float]] = None, 
+                 color_by: Optional[str] = None, 
+                 genes: Optional[Union[str, List[str]]] = None, 
+                 seed: int = 123, 
+                 alpha: float = 0.8,
+                 cmap: Optional[Union[str, Dict[str, str]]] = None, 
+                 ptsize: float = 0.01, 
+                 ticks: bool = False, 
+                 dpi: int = 300,
+                 figsize: tuple = (5, 5), 
+                 edgecolor: str = "#808080", 
+                 linewidth: float = 0.2,
+                 legend_col: int = 2) -> None:
+    """
+    Plot polygons based on the provided adata object.
+
+    Parameters
+    ----------
+    adata : Any
+        An AnnData object containing the data.
+    plot_type : str, optional
+        The type of plot ('cell', 'gene', or 'transcript'), by default "cell".
+    xlims : tuple, optional
+        The x-axis limits for cropping, by default None.
+    ylims : tuple, optional
+        The y-axis limits for cropping, by default None.
+    color_by : str, optional
+        The column from adata.obs to color by, by default None.
+    genes : Union[str, List[str]], optional
+        Genes to be considered for 'gene' or 'transcript' plots, by default None.
+    seed : int, optional
+        Seed for random color generation, by default 123.
+    alpha : float, optional
+        Opacity of the polygons, by default 0.8.
+    cmap : Union[str, Dict[str, str]], optional
+        Color map or a dictionary to map values to colors, by default None.
+    ptsize : float, optional
+        Size of points in the scatter plot, by default 0.01.
+    ticks : bool, optional
+        Whether to display axis ticks, by default False.
+    dpi : int, optional
+        Resolution of the plot, by default 300.
+    figsize : tuple, optional
+        Size of the figure, by default (5, 5).
+    edgecolor : str, optional
+        Color of the polygon edge, by default "#808080".
+    linewidth : float, optional
+        Width of the polygon edge line, by default 0.2.
+    legend_col : int, optional
+        Number of columns in the legend, by default 2.
+
+    Returns
+    -------
+    None
+        Displays the desired plot based on the given parameters.
+    """
+    if 'poly' not in adata.uns:
+        print('Please create polygons first! To create polygons, please use the create_polygons function.')
+        return
+
+    poly_dict = {idx + 1: adata.uns['poly'][key] for idx, key in enumerate(adata.uns['poly'].keys())}
+    new_lib = list(poly_dict.values())
+    subset_idx, new_coord = crop(adata, xlims, ylims)
+    print("Total number of polygons: ", len(new_coord))
+
+    def add_scalebar(ax):
+        scalebar = AnchoredSizeBar(ax.transData,
+                                   50, ' ', 'lower left', 
+                                   pad=0.5,
+                                   sep=5,
+                                   color='black',
+                                   frameon=False,
+                                   size_vertical=2,
+                                   fontproperties=fm.FontProperties(size=12))
+        ax.add_artist(scalebar)
+
+    def plot_cells(ax, new_lib, subset_idx, cols, edgecolor, alpha, linewidth, ticks):
+        if not ticks:
+            ax.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
+        for j, i in enumerate(subset_idx):
+            ax.add_patch(PolygonPatch(new_lib[i], fc=cols[j], ec=edgecolor, alpha=alpha, zorder=0.5, linewidth=linewidth))
+        ax.axis('scaled')
+        ax.grid(False)
+        ax.invert_yaxis()
+        add_scalebar(ax)
+
+    if plot_type == "cell":
+        if color_by is None:
+            cols = ['#6699cc'] * len(subset_idx)
+        else:
+            map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+            cols = new_coord[color_by].map(map_dict).tolist()
+
+        fig, ax = plt.subplots(dpi=dpi, figsize=figsize)
+        plot_cells(ax, new_lib, subset_idx, cols, edgecolor, alpha, linewidth, ticks)
+
+        if color_by is not None:
+            markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='o', linestyle='') for color in map_dict.values()]
+            ax.legend(markers, map_dict.keys(), numpoints=1, loc='center left', bbox_to_anchor=(1, 0.5), frameon=False, ncol=legend_col)
+        plt.show()
+
+    elif plot_type == "gene":
+        if isinstance(genes, str):
+            genes = [genes]
+
+        def create_gene_plot(ax, gene, counts, cmap, subset_idx, alpha, edgecolor, ticks):
+            c_max = np.quantile(counts, 0.99)
+            bar_colors = [cmap(c / c_max) for c in counts]
+            bar_colors = np.clip(bar_colors, 0, 1)
+            all_colors = [to_hex(i) for i in bar_colors]
+            cols = [all_colors[i] for i in subset_idx]
+            if not ticks:
+                ax.tick_params(left=False, right=False, labelleft=False, labelbottom=False, bottom=False)
+
+            ax.set_title(gene)
+            for j, i in enumerate(subset_idx):
+                ax.add_patch(PolygonPatch(new_lib[i], fc=cols[j], ec=edgecolor, alpha=alpha, zorder=0.1, linewidth=linewidth))
+            ax.axis('scaled')
+            ax.grid(False)
+            ax.invert_yaxis()
+            add_scalebar(ax)
+            norm = matplotlib.colors.Normalize(vmin=min(counts), vmax=c_max)
+            return norm
+
+        n_rows = math.ceil(len(genes) / 3)
+        n_cols = min(len(genes), 3)
+        if cmap is None:
+            cmap = matplotlib.colors.LinearSegmentedColormap.from_list("", ['#f2f2f2', '#ffdbdb', '#fc0303'])
+
+        fig, axs = plt.subplots(nrows=n_rows, ncols=n_cols, figsize=figsize, dpi=dpi)
+
+        if len(genes) == 1:
+            counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
+            norm = create_gene_plot(axs, genes[0], counts, cmap, subset_idx, alpha, edgecolor, ticks)
+            divider = make_axes_locatable(axs)
+            cax = divider.append_axes("right", size="3%", pad=0.05)
+            fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=axs, cax=cax)
+        else:
+            axs = axs.flatten()
+            for gene, ax in zip(genes, axs):
+                counts = sc.get.obs_df(adata, keys=gene).to_list()
+                norm = create_gene_plot(ax, gene, counts, cmap, subset_idx, alpha, edgecolor, ticks)
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="3%", pad=0.05)
+                plt.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, cax=cax)
+
+            for idx in range(len(genes), n_rows * n_cols):
+                fig.delaxes(axs[idx])
+
+        plt.tight_layout()
+        plt.show()
+
+    elif plot_type == "transcript":
+        mol_data = adata.uns['transcript']
+        cell_id_keep = new_coord.cell_id.tolist()
+        mol_data2 = mol_data[mol_data.cell_id.isin(cell_id_keep) & mol_data.feature_name.isin(genes)]
+        if cmap is None:
+            random.seed(seed)
+            tx_col = ["#" + ''.join([random.choice('0123456789ABCDEF') for _ in range(6)]) for _ in genes]
+            map_dict = dict(zip(genes, tx_col))
+        else:
+            map_dict = cmap
+
+        all_tx = mol_data2['feature_name'].to_list()
+        all_tx = pd.DataFrame(all_tx, columns=['colors']).replace({'colors': map_dict})
+
+        fig, ax = plt.subplots(dpi=dpi, figsize=figsize)
+        plot_cells(ax, new_lib, subset_idx, ['#fcfcfa'] * len(subset_idx), edgecolor, alpha, linewidth, ticks)
+        ax.scatter(mol_data2.x_location, mol_data2.y_location, c=all_tx.colors, s=ptsize)
+        markers = [plt.Line2D([0, 0], [0, 0], color=color, marker='o', linestyle='') for color in map_dict.values()]
+        ax.legend(markers, map_dict.keys(), numpoints=1, loc='center left', bbox_to_anchor=(1, 0.5), frameon=False, ncol=legend_col)
         plt.show()
 
 def plot_scatter_img(
