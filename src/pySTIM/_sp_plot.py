@@ -121,7 +121,7 @@ def plot_scatter(
     if not genes:
         
         subset_idx, new_coord = crop(adata, xlims, ylims)
-        map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+        map_dict = get_color_map(adata, seed = seed, color_by = color_by, cmap = cmap, genes = genes, subset_idx = subset_idx)
         coords = adata[
             new_coord.index,
         ].obsm["spatial"]
@@ -165,7 +165,7 @@ def plot_scatter(
         counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
         subset_idx, new_coord = crop(adata, xlims, ylims)
 
-        cmap = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+        cmap = get_color_map(adata, seed = seed, color_by = color_by, cmap = cmap, genes = genes, subset_idx = subset_idx)
 
         c_max = np.quantile(counts, 0.99)
         c_min = min(counts)
@@ -284,7 +284,7 @@ def plot_polygon(adata: Any,
         if color_by is None:
             cols = ['#6699cc'] * len(subset_idx)
         else:
-            map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+            map_dict = get_color_map(adata, seed = seed, color_by = color_by, cmap = cmap, genes = genes, subset_idx = subset_idx)
             cols = new_coord[color_by].map(map_dict).tolist()
 
         fig, ax = plt.subplots(dpi=dpi, figsize=figsize)
