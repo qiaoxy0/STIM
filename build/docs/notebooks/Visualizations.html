@@ -92,8 +92,17 @@
 <h1>Visualizations functions<a class="headerlink" href="#visualizations-functions" title="Link to this heading"></a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib</span>
-<span class="kn">import</span> <span class="nn">pySTIM</span> <span class="k">as</span> <span class="nn">pst</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scanpy</span> <span class="k">as</span> <span class="nn">sc</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">anndata</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">mpl_toolkits.axes_grid1</span> <span class="kn">import</span> <span class="n">make_axes_locatable</span>
 </pre></div>
 </div>
 </div>
@@ -102,6 +111,13 @@
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pySTIM</span> <span class="k">as</span> <span class="nn">pst</span>
 </pre></div>
 </div>
 </div>
@@ -152,7 +168,7 @@ Data loading completed.
 <img alt="../../_images/636afc37b03e61c4e9616c05f9eecf2d8a5920039b16d5c13d9c46acd63065d7.png" src="../../_images/636afc37b03e61c4e9616c05f9eecf2d8a5920039b16d5c13d9c46acd63065d7.png" />
 </div>
 </div>
-<p>Focusing on a specific region of the dataset by setting the <code class="docutils literal notranslate"><span class="pre">xlims</span></code> and <code class="docutils literal notranslate"><span class="pre">ylims</span></code>.</p>
+<p>Focusing on a specific region of the dataset by setting the <code class="docutils literal notranslate"><span class="pre">xlim</span></code> and <code class="docutils literal notranslate"><span class="pre">ylims</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_scatter</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color_by</span><span class="o">=</span><span class="s2">&quot;cluster&quot;</span><span class="p">,</span> <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3000</span><span class="p">,</span><span class="mi">3500</span><span class="p">],</span> <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4500</span><span class="p">,</span><span class="mi">5000</span><span class="p">],</span> <span class="n">ptsize</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span>
@@ -302,10 +318,17 @@ Data loading completed.
 <p>For visualization, we can also overlay molecular data on histology images. This process might take longer as each cell is represented as polygon data.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cmap_greens</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s2">&quot;Greens&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;#e5e5e5&quot;</span><span class="p">,</span> <span class="s2">&quot;#a1d99b&quot;</span><span class="p">,</span> <span class="s2">&quot;#31a354&quot;</span><span class="p">,</span> <span class="s2">&quot;#004a1b&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
 <span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span> 
                 <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
-                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_greens</span><span class="p">,</span> 
                 <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> 
                 <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
@@ -317,9 +340,9 @@ Data loading completed.
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/e737c0c0b48d90ae64be20b5a545a8e2b7eb51d2ed138e45ac3b369035133c91.png" src="../../_images/e737c0c0b48d90ae64be20b5a545a8e2b7eb51d2ed138e45ac3b369035133c91.png" />
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 32.6 s, sys: 609 ms, total: 33.2 s
-Wall time: 32.9 s
+<img alt="../../_images/0325fc6b5d622b40bcdb35fde55bbf8d1dd3d966f0d8dddcd709052161ffe159.png" src="../../_images/0325fc6b5d622b40bcdb35fde55bbf8d1dd3d966f0d8dddcd709052161ffe159.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 20.3 s, sys: 302 ms, total: 20.6 s
+Wall time: 20.3 s
 </pre></div>
 </div>
 </div>
@@ -327,53 +350,88 @@ Wall time: 32.9 s
 <p>Let’s compare these resolutions in terms of spatial gene expression distribution.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span> 
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_16um&#39;</span><span class="p">],</span>
                 <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
-                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3800</span><span class="p">,</span> <span class="mi">4300</span><span class="p">],</span>
+                <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3900</span><span class="p">,</span> <span class="mi">4400</span><span class="p">],</span>
+                <span class="n">crop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_greens</span><span class="p">,</span>  
+                <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> 
                 <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
-                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
                 <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">scale_bar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/e797de0db3fc1c2eb5aea2391fbb1365715cc2f6b9d35bbfb44cf535e264ae28.png" src="../../_images/e797de0db3fc1c2eb5aea2391fbb1365715cc2f6b9d35bbfb44cf535e264ae28.png" />
+<img alt="../../_images/55f0c5b88223341690440f3c409df328f319a6fda6cccb12e1864ec806abf82e.png" src="../../_images/55f0c5b88223341690440f3c409df328f319a6fda6cccb12e1864ec806abf82e.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 8.35 s, sys: 151 ms, total: 8.5 s
+Wall time: 8.34 s
+</pre></div>
+</div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_8um&#39;</span><span class="p">],</span> 
-                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
-                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_8um&#39;</span><span class="p">],</span>
+               <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3800</span><span class="p">,</span><span class="mi">4300</span><span class="p">],</span>
+                <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3900</span><span class="p">,</span> <span class="mi">4400</span><span class="p">],</span>
+                <span class="n">crop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_greens</span><span class="p">,</span>  
+                <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> 
                 <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
-                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
                 <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">scale_bar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">cutoff</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/fa7923898e356e3c6cf39a0f9057902fb5d2c2f5e22ef1dd304ab041b3295c2a.png" src="../../_images/fa7923898e356e3c6cf39a0f9057902fb5d2c2f5e22ef1dd304ab041b3295c2a.png" />
+<img alt="../../_images/b8f7529ad53d24ef18e423519ac1af7f83e0f2bd661ad4d298603081f4765c71.png" src="../../_images/b8f7529ad53d24ef18e423519ac1af7f83e0f2bd661ad4d298603081f4765c71.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 22 s, sys: 290 ms, total: 22.3 s
+Wall time: 22 s
+</pre></div>
+</div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_2um&#39;</span><span class="p">],</span> 
-                <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
-                <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">pst</span><span class="o">.</span><span class="n">plot_visiumHD</span><span class="p">(</span><span class="n">layer_dict</span><span class="p">[</span><span class="s1">&#39;bin_2um&#39;</span><span class="p">],</span>
+               <span class="n">genes</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PIGR&quot;</span><span class="p">],</span> 
+                <span class="n">xlims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3800</span><span class="p">,</span><span class="mi">4300</span><span class="p">],</span>
+                <span class="n">ylims</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3900</span><span class="p">,</span> <span class="mi">4400</span><span class="p">],</span>
+                <span class="n">crop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="n">cmap_greens</span><span class="p">,</span>  
+                <span class="n">bin_size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> 
                 <span class="n">ticks</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                 <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
-                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">dpi</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
                 <span class="n">legend_loc</span> <span class="o">=</span> <span class="s2">&quot;center left&quot;</span><span class="p">,</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+                <span class="n">scale_bar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span><span class="n">s</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                <span class="n">cutoff</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/a5d96c565bcb4bb7c72af3713476bc0df50029be96f8110a10b3d2d06521a4f8.png" src="../../_images/a5d96c565bcb4bb7c72af3713476bc0df50029be96f8110a10b3d2d06521a4f8.png" />
+<img alt="../../_images/4e2f4a715c79730ce15e17a71296b76f5e00352f92a531b1b36cda088fae7555.png" src="../../_images/4e2f4a715c79730ce15e17a71296b76f5e00352f92a531b1b36cda088fae7555.png" />
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 3min 8s, sys: 2.2 s, total: 3min 10s
+Wall time: 3min 9s
+</pre></div>
+</div>
 </div>
 </div>
 </section>

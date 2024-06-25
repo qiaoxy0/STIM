@@ -642,7 +642,7 @@ def plot_visiumHD(
             sep=5,
             color="black",
             frameon=False,
-            size_vertical=2,
+            size_vertical=4,
             fontproperties=fm.FontProperties(size=12),
         )
         ax.add_artist(scalebar)

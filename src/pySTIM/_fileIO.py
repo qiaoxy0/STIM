@@ -164,6 +164,7 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 		layer_data = layer_data[cells_keep]
 		layer_data.obsm["X_umap"] = umap.loc[cells_keep, ["UMAP-1", "UMAP-2"]].copy().to_numpy()
 		layer_data.obs["cluster"] = clusters.loc[cells_keep, "Cluster"].copy().to_numpy()
+		layer_data.obs["cluster"] = layer_data.obs["cluster"].astype('category')
 	
 	
 	layer_data.uns['spatial'] = {
