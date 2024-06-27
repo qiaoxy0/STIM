@@ -90,67 +90,71 @@ def crop(adata: Any,
     return subset_idx, cell_coord2
 
 
-def get_color_map(adata: Any, 
-					seed: int = 42,
-					color_by: Optional[str] = None, 
-					cmap: Optional[Union[str, Dict[str, str]]] = None,  
-					genes: Optional[Union[str, List[str]]] = None,
-					subset_idx: Optional[List[int]] = None):
-		"""
-		Get a color map for the given adata.
+def get_color_map(
+    adata: Any,
+    seed: int = 42,
+    color_by: Optional[str] = None,
+    cmap: Optional[Union[str, Dict[str, str]]] = None,
+    genes: Optional[Union[str, List[str]]] = None,
+    subset_idx: Optional[List[int]] = None,
+):
+    """
+    Get a color map for the given adata.
 
-		Parameters:
-		- adata: An anndata object.
-		- color_by (Optional[str]): Category from adata.obs by which to color the output.
-		- cmap (Optional[Union[str, Dict[str, str]]]): Color map or a dictionary to map values to colors.
-		- seed (int): Seed for random color generation.
-		- genes (Optional[Union[str, List[str]]]): Whether the map is based on genes or not.
-		- subset_idx (Optional[List[int]]): Indices of the subset of data to be considered.
+    Parameters:
+    - adata: An anndata object.
+    - color_by (Optional[str]): Category from adata.obs by which to color the output.
+    - cmap (Optional[Union[str, Dict[str, str]]]): Color map or a dictionary to map values to colors.
+    - seed (int): Seed for random color generation.
+    - genes (Optional[Union[str, List[str]]]): Whether the map is based on genes or not.
+    - subset_idx (Optional[List[int]]): Indices of the subset of data to be considered.
 
-		Returns:
-		- Union[str, Dict[str, str]]: A color map or a dictionary mapping values to colors.
-		"""
-	
-		def generate_unique_random_colors(num_colors: int):
-			random.seed(seed)
-			colors = set()
-			while len(colors) < num_colors:
-					color = "#" + ''.join(random.choices('0123456789ABCDEF', k=6))
-					colors.add(color)
-			return list(colors)
-	
-		def generate_cell_type_map():
-			if color_by not in adata.obs:
-					raise ValueError(f"{color_by} not found in adata.obs")
-			cell_types = list(np.unique(adata.obs[color_by]))
-			key = f'{color_by}_colors'
-			if key in adata.uns.keys():
-					cell_colors = adata.uns[key]
-			else:
-					cell_colors = generate_unique_random_colors(len(cell_types))
-			return dict(zip(cell_types, cell_colors))
-	
-		if genes is None:
-			genes = False
-			
-		if subset_idx is None:
-			subset_idx = list(range(adata.shape[0]))
-			
-		if not genes:
-			if color_by is None:
-				map_dict = ['#6699cc'] * len(subset_idx)
-			elif cmap is None:
-				map_dict = generate_cell_type_map()
-			else:
-				map_dict = cmap
-		else:
-			if cmap is None:
-				colors = ['#f2f2f2', '#ffdbdb', '#fc0303']
-				map_dict = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
-			else:
-				map_dict = cmap
-					
-		return map_dict
+    Returns:
+    - Union[str, Dict[str, str]]: A color map or a dictionary mapping values to colors.
+    """
+
+    def generate_unique_random_colors(num_colors: int):
+        random.seed(seed)
+        colors = set()
+        while len(colors) < num_colors:
+            color = "#" + "".join(random.choices("0123456789ABCDEF", k=6))
+            colors.add(color)
+        return list(colors)
+
+    def generate_cell_type_map():
+        if color_by not in adata.obs:
+            raise ValueError(f"{color_by} not found in adata.obs")
+        adata.obs[color_by] = adata.obs[color_by].astype('category')
+        cell_types = np.array(adata.obs[color_by].cat.categories)
+        key = f"{color_by}_colors"
+        if key in adata.uns.keys():
+            cell_colors = adata.uns[key]
+        else:
+            cell_colors = generate_unique_random_colors(len(cell_types))
+        return dict(zip(cell_types, cell_colors))
+
+    if genes is None:
+        genes = False
+
+    if subset_idx is None:
+        subset_idx = list(range(adata.shape[0]))
+
+    if not genes:
+        if color_by is None:
+            map_dict = ["#6699cc"] * len(subset_idx)
+        elif cmap is None:
+            map_dict = generate_cell_type_map()
+        else:
+            map_dict = cmap
+    else:
+        if cmap is None:
+            colors = ["#f2f2f2", "#ffdbdb", "#fc0303"]
+            map_dict = matplotlib.colors.LinearSegmentedColormap.from_list("", colors)
+        else:
+            map_dict = cmap
+
+    return map_dict
+
 
 
 def split_field(df: pd.DataFrame, 

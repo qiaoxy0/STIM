@@ -101,6 +101,7 @@ def read_xenium(xenium_path: str) -> sc.AnnData:
     except Exception as e:
         raise RuntimeError(f"Failed to read and process Xenium data: {str(e)}")
 
+
 def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	"""
 	Reads VisiumHD layers, optionally including UMAP and cluster data if available.
@@ -131,10 +132,13 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	layer_data.var_names_make_unique()
 	
 	pos = pd.read_parquet(pos_file)
-	all_cells = set(layer_data.obs_names)
-	pos = pos[pos['barcode'].isin(all_cells) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
-	
 	pos.index = pos['barcode']
+
+	all_cells = set(layer_data.obs_names)
+	cells_keep = pos.index.intersection(all_cells)
+	layer_data = layer_data[cells_keep]
+	
+	pos = pos[pos['barcode'].isin(cells_keep) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
 	pos = pos.loc[layer_data.obs.index, ]
 	layer_data.obs = layer_data.obs.join(pos)
 	
@@ -165,8 +169,8 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 		layer_data.obsm["X_umap"] = umap.loc[cells_keep, ["UMAP-1", "UMAP-2"]].copy().to_numpy()
 		layer_data.obs["cluster"] = clusters.loc[cells_keep, "Cluster"].copy().to_numpy()
 		layer_data.obs["cluster"] = layer_data.obs["cluster"].astype('category')
-	
-	
+		
+		
 	layer_data.uns['spatial'] = {
 			'scalefactors': json_data,
 		}	

@@ -392,6 +392,7 @@ def plot_scatter_img(
     img_alpha=1,
     bbox_to_anchor: tuple = (1.0, 0.5),
     save: Optional[str] = None,
+    cutoff: float = 0.2, 
 ) -> None:
     """
     Scatter plot of spatial omics data based on AnnData object with optional registered background image.
@@ -487,7 +488,7 @@ def plot_scatter_img(
 
     if not genes:
         subset_idx, new_coord = crop(adata, xlims, ylims)
-        map_dict = get_color_map(adata, color_by, cmap, seed, genes, subset_idx)
+        map_dict = get_color_map(adata, seed = seed, color_by = color_by, cmap = cmap, genes = genes, subset_idx = subset_idx)
         coords = adata[
             new_coord.index,
         ].obsm["spatial"]
@@ -518,14 +519,12 @@ def plot_scatter_img(
         counts = sc.get.obs_df(adata, keys=genes[0]).to_list()
         subset_idx, new_coord = crop(adata, xlims, ylims)
 
-        filtered_idx = [i for i, count in enumerate(counts) if count >= 0.2]
+        filtered_idx = np.where(counts >= cutoff)[0]
         filtered_counts = [counts[i] for i in filtered_idx]
-        filtered_subset_idx = [idx for idx in subset_idx if idx in filtered_idx]
+        filtered_subset_idx = np.intersect1d(subset_idx, filtered_idx)
         filtered_coords = adata.obs.iloc[filtered_subset_idx]
 
-        cmap = get_color_map(
-            adata, color_by, cmap, seed, genes, filtered_subset_idx
-        )
+        cmap = get_color_map(adata, seed = seed, color_by = color_by, cmap = cmap, genes = genes, subset_idx = subset_idx)
 
         c_max = np.quantile(counts, 0.99)
         c_min = min(counts)
