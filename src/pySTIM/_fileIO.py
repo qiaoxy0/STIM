@@ -136,7 +136,8 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 
 	all_cells = set(layer_data.obs_names)
 	
-	pos = pos[pos['barcode'].isin(cells_keep) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
+	pos = pos[(pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
+    
 	cells_keep = pos.index.intersection(all_cells)
 	layer_data = layer_data[cells_keep]
 	pos = pos.loc[layer_data.obs.index, ]
