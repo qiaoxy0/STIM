@@ -139,8 +139,7 @@ def read_layers(hd_dir: str, bin_size: int = 2) -> sc.AnnData:
 	pos = pos[pos['barcode'].isin(cells_keep) & (pos['pxl_row_in_fullres'] > 0) & (pos['pxl_col_in_fullres'] > 0)]
 	cells_keep = pos.index.intersection(all_cells)
 	layer_data = layer_data[cells_keep]
-    
-    pos = pos.loc[layer_data.obs.index, ]
+	pos = pos.loc[layer_data.obs.index, ]
 	layer_data.obs = layer_data.obs.join(pos)
 	
 	with open(json_file) as f:
