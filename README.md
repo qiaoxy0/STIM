@@ -18,5 +18,3 @@ Installation using pip:\
 - **[Cell Neighborhoods Mapping and Functional Characterization](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/CN_analysis.ipynb)**
 - **[Inference of Ligand-Receptor Interactions](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/LR_analysis.ipynb)**
 - **[Core Visualization Functions](https://github.com/qiaoxy0/STIM/blob/main/source/docs/notebooks/Visualizations.ipynb)**
-
-For more detailed information and example usage, please visit our [documentation](https://stimdoc.readthedocs.io/).
